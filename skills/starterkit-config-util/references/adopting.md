@@ -29,6 +29,11 @@ npm view @devopsnext/starterkit-config-util version
 pnpm add @devopsnext/starterkit-config-util@<that version>
 ```
 
+The version is also on the package page if you'd rather read it there:
+<https://www.npmjs.com/package/@devopsnext/starterkit-config-util>
+
+Then confirm `package.json` holds the bare number, not `"^<that version>"`.
+
 Already installed with a caret by mistake? `pnpm remove` first, then re-add with
 the exact version, rather than assuming `pnpm add` rewrites the existing spec.
 

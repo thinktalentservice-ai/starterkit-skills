@@ -46,23 +46,53 @@ Import the **narrowest** entry. The `.` entry is zero-dependency on purpose — 
 route that only wants `parseBoolean` must not pull `jose` and `secure-ls` into
 its bundle.
 
-## Installing — two traps, both measured
+## Installing — always the latest version, always pinned exactly
+
+**Always two steps. Never one.** Look up the current latest, then install *that
+literal version number*. Never install a range, and never assume the version this
+file names is still latest.
+
+**Step 1 — ask the registry what latest is.** Either of these; the CLI is
+preferred because its answer pastes straight into step 2:
 
 ```bash
-# CORRECT
-pnpm add @devopsnext/starterkit-config-util@<exact-version>
+npm view @devopsnext/starterkit-config-util version
 ```
 
-**Trap 1 — never `@latest`.** Verified against pnpm 11.11.0 on a clean project:
+Or read it off the package page — the version is at the top right:
+<https://www.npmjs.com/package/@devopsnext/starterkit-config-util>
+(`npm view @devopsnext/starterkit-config-util versions --json` lists every
+published version; `… time --json` adds the publish timestamps you will need for
+Trap 2 below.)
+
+**Step 2 — install that exact number**, substituting whatever step 1 returned:
+
+```bash
+pnpm add @devopsnext/starterkit-config-util@<version-from-step-1>
+```
+
+At the time this file was written step 1 answered `0.1.0`, so step 2 was
+`pnpm add @devopsnext/starterkit-config-util@0.1.0`.
+
+`package.json` must end up holding the bare number —
+`"@devopsnext/starterkit-config-util": "0.1.0"`. **Open it and check.**
+
+**Trap 1 — a one-step install records a range.** Measured against pnpm 11.11.0 on
+a clean project:
 
 | Command | Writes |
 |---|---|
 | `pnpm add …-config-util@0.1.0` | `"0.1.0"` ✅ exact |
 | `pnpm add …-config-util@latest` | `"^0.1.0"` ❌ caret |
 
-A caret fails any `pinned === installed` gate, and it lets a minor bump change how
-every API response in the app is parsed with no review. If unsure, add
-`--save-exact`.
+Same for `@^0`, `@~0.1`, `@*` and a bare `pnpm add <pkg>` — all of them record a
+range. A caret fails any `pinned === installed` gate, and it lets a minor bump
+change how every API response in the app is parsed with no review. If your client
+widened it anyway, re-add with `--save-exact` (npm/pnpm) or `--exact` (yarn).
+
+Step 1 is not there to avoid new versions — it is there to take the newest one
+**deliberately**, on a line someone can review. Upgrading later is the same two
+steps: re-run step 1, and if the number moved, re-run step 2 with it.
 
 **Trap 2 — a MISSING `minimumReleaseAgeStrict` lets pnpm exempt the package for you.**
 
@@ -244,7 +274,7 @@ decrypt silently fails.
 | `ERR_REQUIRE_ESM` | something `require()`d it | ESM-only; use `import` |
 | "pressing Start signs me out" | a diagnostic went through `getJSON` | `probeFetch` |
 | Build green, every service URL empty | `NEXT_PUBLIC_APP_ENV` names an `Object.prototype` member (`constructor`, `toString`, `__proto__`) | `createAppConfig` throws on these — if it does not, you are not using it |
-| Gate says pin/install mismatch | installed with `@latest` → caret | re-add with an exact version |
+| Gate says pin/install mismatch | installed in one step (`@latest`, `@^0`, or a bare `pnpm add`) → a range, not a number | look the version up, then re-add it exactly; `--save-exact` if the client still widens |
 | Release-age gate fails on an entry you did not write | pnpm auto-appended it without a marker | add `# published <ISO8601>`, or delete it once the window passed |
 
 ## Red flags — stop
@@ -253,5 +283,10 @@ decrypt silently fails.
 - About to write `const secret = getConfig().X` at module scope → **don't**.
 - About to reach for `getJSON` for a health check, avatar or any diagnostic → **`probeFetch`/`getBlob`**.
 - About to delete the `hasConfigSource()` throw as redundant → it is the only thing making a missing wire-up fail the build.
-- About to run `pnpm add …@latest` → you will get a caret.
+- About to run `pnpm add …@latest`, `@^0`, `@~0.1` or a bare `pnpm add <pkg>` →
+  all of them record a **range**. Look the latest version up, then install that
+  literal number.
+- `package.json` shows `"^0.1.0"` rather than `"0.1.0"` → re-add with `--save-exact`.
+- About to install the version this file names without re-checking the registry →
+  check first; latest may have moved past 0.1.0.
 - Gate output says `LOCAL BUILD — pin NOT enforced` → you are on a `file:` tarball; that must never reach a shared branch.
