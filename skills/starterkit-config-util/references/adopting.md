@@ -29,14 +29,31 @@ npm view @devopsnext/starterkit-config-util version
 pnpm add @devopsnext/starterkit-config-util@<that version>
 ```
 
+Already installed with a caret by mistake? `pnpm remove` first, then re-add with
+the exact version, rather than assuming `pnpm add` rewrites the existing spec.
+
 Then **check what pnpm did to your workspace file**:
 
 ```bash
 git diff pnpm-workspace.yaml
 ```
 
-If pnpm auto-appended a `minimumReleaseAgeExclude` entry, rewrite it with a marker
-your gate can parse, and a comment saying it is a bridge:
+**If your repo sets no `minimumReleaseAge`, skip the rest of this step** — pnpm
+appends nothing and there is nothing to mark. Do not invent an entry.
+
+Otherwise: the entry only gets auto-written because `minimumReleaseAgeStrict: true`
+is missing. **Fix the flag as well as the entry**, or pnpm silently re-appends on
+the next same-day adoption:
+
+```yaml
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
+```
+
+Then repair the entry — and pick the right repair. If the window has **already
+passed**, adding a marker fails as EXPIRED; *delete the line* instead. If it is
+still open, rewrite it with a marker your gate can parse and a comment saying it
+is a bridge:
 
 ```yaml
 minimumReleaseAgeExclude:
@@ -99,6 +116,21 @@ Set the three options **to match what your app did before**, not to the package
 defaults. Changing behaviour and extracting code in the same commit makes a
 regression unattributable.
 
+**How to derive `payloadOnlyDecompress`** — read your old `authFetch`, find the
+branch taken when the decompress flag is ON, and ask what it does with a response
+whose ONLY key is `payload`:
+
+| Your old code, flag ON | Pass |
+|---|---|
+| decompresses a lone `{payload}`, returns multi-key responses untouched | `true` (default) |
+| returns `checked` untouched no matter what | `false` |
+
+**One behaviour change you cannot opt out of:** the package rebuilds secure-ls
+whenever the secret *value* changes, where most local copies built it once. If a
+runtime `env.json` ever sets `STORAGE_SECRET`, everything written under the old
+value stops decrypting and every user appears signed out. Keep that key
+build-time-only.
+
 ## 4. Shims, not 20 rewritten imports
 
 ```js
@@ -160,7 +192,17 @@ remapped set instead of the defaults.
 
 **Also add a row to whatever gate enforces your exact version pins.** If that gate
 requires a `styles.css` per package, scope the requirement to packages that declare
-a CSS alias prefix — this one correctly ships no CSS.
+a CSS alias prefix — this one correctly ships no CSS. A row shaped like:
+
+```js
+{ name: "config-util", pkg: "@devopsnext/starterkit-config-util", alias: null,
+  why: "ships no CSS - config/storage/fetch mechanism, so only the pin applies" },
+```
+
+**Do not locate the package with `createRequire(...).resolve(pkg)`.** It throws
+`ERR_PACKAGE_PATH_NOT_EXPORTED` on an ESM-only package, and the error usually
+advises running `pnpm install`, which is not the problem. Read
+`node_modules/<pkg>/package.json` directly.
 
 ## 7. Prove the new assertions can fail
 

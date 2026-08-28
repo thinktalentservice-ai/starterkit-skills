@@ -27,7 +27,8 @@ mistakes are silent. These three are, and each has a specific counter below.
 
 | Symptom | Cause | Counter |
 |---|---|---|
-| Every user appears signed out. No console error. Build green. | `setConfigSource` never ran, or `STORAGE_SECRET` is undefined. secure-ls then fails every decrypt and every accessor returns `null`. | `hasConfigSource()` self-check + gate assertions 6/7 |
+| Every user appears signed out. **No console error at all.** Build green. | The secret is *wrong or changed*, not missing — writes succeed, reads fail, and reads swallow. | never let `env.json` set `STORAGE_SECRET`; see Diagnostics |
+| Login dies at the callback with a thrown error. | The secret is *missing*. **Writes do not swallow** — `setCookie`/`setLocalStorage` let `assertSecret` throw. | `hasConfigSource()` self-check + gate assertions |
 | One config key ignores a post-deploy `env.json` while every other key honours it. | Something captured that value at module scope. | Read inside the function, never at module scope |
 | Login redirects to `undefined/oauth/authorize?…`. All routes prerendered. | An env config is missing a key another env defines. | The consumer's env-config gate, kept intact |
 
@@ -37,7 +38,7 @@ mistakes are silent. These three are, and each has a specific counter below.
 |---|---|---|
 | `@devopsnext/starterkit-config-util` | `normalizeOrigin`, `createAppConfig`, `setConfigSource`, `getConfig`, `hasConfigSource`, `requiredConfigKeys`, `DEFAULT_CONFIG_KEYS`, `parseBoolean`, `getEnvBoolean`, `parseNumber` | **none** |
 | `…/env-json` | `decodeEnvJson`, `unknownKeys` | react-security-util |
-| `…/storage` | `ApiUtils` (default), `createApiUtils`, `encodeJwtString`, `decodeJwtString` | jose, secure-ls, react-security-util |
+| `…/storage` | `ApiUtils` (default), `createApiUtils`, `encodeJwtString`, `decodeJwtString`, `hasStorageSecret` | jose, secure-ls, react-security-util |
 | `…/fetch` | `authFetch`, `getJSON`, `postJSON`, `putJSON`, `deleteJSON`, `postFormData`, `postBinary`, `getBlob`, `probeFetch`, `authHeaders`, `getToken`, `createFetchHelpers` | via `…/storage` |
 | `…/payload` | `buildCompressedPayload` | react-security-util |
 
@@ -63,10 +64,18 @@ A caret fails any `pinned === installed` gate, and it lets a minor bump change h
 every API response in the app is parsed with no review. If unsure, add
 `--save-exact`.
 
-**Trap 2 — pnpm silently writes a release-age exclusion that your gate will reject.**
-Also measured: installing a package younger than `minimumReleaseAge`, without
-`minimumReleaseAgeStrict: true`, makes pnpm **create or edit `pnpm-workspace.yaml`**
-and append:
+**Trap 2 — a MISSING `minimumReleaseAgeStrict` lets pnpm exempt the package for you.**
+
+The root cause is the missing flag, not the entry pnpm writes. Fix the flag first,
+or pnpm silently re-appends on the next same-day adoption:
+
+```yaml
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true        # <- without this, pnpm edits the file itself
+```
+
+Measured: installing a package younger than the window **without** the strict flag
+makes pnpm **create or edit `pnpm-workspace.yaml`** and append:
 
 ```yaml
 minimumReleaseAgeExclude:
@@ -74,7 +83,15 @@ minimumReleaseAgeExclude:
 ```
 
 It installs anyway and the line scrolls past. If your repo runs a release-age gate,
-that entry fails it — the entry must carry the publish time as a parseable marker:
+that entry fails it. **Two different repairs, and picking the wrong one keeps it red:**
+
+- **Window has NOT passed** → keep the line, add the publish-time marker.
+- **Window HAS passed** → *delete the line*. A marker on an expired entry fails as
+  EXPIRED. By then the package installs on its own age, so removing it is safe.
+- **Consumer sets no `minimumReleaseAge` at all** → pnpm appends nothing and there is
+  nothing to mark. Skip this entirely rather than inventing an entry.
+
+To keep it (window still open):
 
 ```yaml
   # Bridge, not a setting. Delete once the window has passed; by then the package
@@ -193,7 +210,11 @@ not cancellable on unmount.
 
 ## ESM-only
 
-No `require()`. The package ships no CJS build, for two verified reasons: `jose`
+No `require()` — **including inside your own gate scripts.** A gate that locates
+packages with `createRequire(...).resolve(pkg)` throws
+`ERR_PACKAGE_PATH_NOT_EXPORTED` against this package, and the error message
+typically tells you to run `pnpm install`, which is not the problem. Read
+`node_modules/<pkg>/package.json` directly instead. The package ships no CJS build, for two verified reasons: `jose`
 declares no `require` condition (so a CJS entry throws `ERR_REQUIRE_ESM`), and
 tsup does not code-split CJS, which would give each subpath entry its own copy of
 the config registry — the host wiring one object while `./storage` reads another,
@@ -216,7 +237,8 @@ decrypt silently fails.
 | Symptom | Most likely cause | Check |
 |---|---|---|
 | Every user appears signed out; no errors | `setConfigSource` not called, or `STORAGE_SECRET` undefined | `hasConfigSource()`; grep the built chunks for the registry symbol |
-| Same, but only after an `env.json` edit | `env.json` set `STORAGE_SECRET` — the storage re-keys on secret change, so data written under the old secret no longer decrypts | never put `STORAGE_SECRET` in `env.json`; treat it as build-time only |
+| Same, but only after an `env.json` edit | `env.json` set `STORAGE_SECRET`. The storage **re-keys whenever the secret value changes**, so everything written under the old one stops decrypting. This is a behaviour change adoption introduces — the local code most apps had built secure-ls once — and there is no option to opt out. | never put `STORAGE_SECRET` in `env.json`; treat it as build-time only, and assert that in your env.json decode step |
+| Login throws at the callback, rather than silently failing | the secret is **missing**, not wrong. `setCookie`/`setLocalStorage` do not swallow. | `hasStorageSecret()` from `…/storage` answers this in one call |
 | One key ignores `env.json`; the rest honour it | that key was captured at module scope | move the read inside a function |
 | `undefined/oauth/authorize` in the built output | an env config is missing a key another defines | your env-config gate, assertions 2/3 |
 | `ERR_REQUIRE_ESM` | something `require()`d it | ESM-only; use `import` |
