@@ -29,6 +29,7 @@ npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skil
 | Skill | Use when |
 |---|---|
 | [`starterkit-button`](skills/starterkit-button/SKILL.md) | Adding, restyling, reviewing or migrating any button, CTA, action row, toolbar control or link-styled-as-button; choosing a `variant=` / `tone=` / `fill=` string; installing or pinning `@devopsnext/starterkit-button-component`; or diagnosing a grey button, an unreadable label on a brand fill, or a translucent button that disappears. |
+| [`starterkit-card`](skills/starterkit-card/SKILL.md) | Adding, restyling, reviewing or migrating any card, panel, tile, KPI/stat block, list-item surface or clickable content container; choosing a `variant=` / `tone=` / `fill=` string; installing or pinning `@devopsnext/starterkit-card-component`; or diagnosing a gradient card that renders grey, an unreadable label on a gradient, content that shifts when the border is removed, or a popover clipped at the card's edge. |
 | [`starterkit-config-util`](skills/starterkit-config-util/SKILL.md) | Adopting, wiring, debugging or extending `@devopsnext/starterkit-config-util` — installing or pinning it, editing `src/config/*`, reading a config key, adding a health check, or diagnosing "every user appears signed out" / `undefined/oauth/authorize` / ignored `env.json` overrides. |
 
 ## Layout
