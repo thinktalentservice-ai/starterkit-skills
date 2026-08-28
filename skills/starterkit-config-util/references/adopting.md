@@ -105,7 +105,7 @@ const config = createAppConfig({
 setConfigSource(config, {
   mirrorRaw: true,                                  // only if you already wrote "<key>_raw" mirrors
   decompressOverrideKey: "VITE_RESPONSE_DECOMPRESS", // only if that is your sessionStorage key
-  payloadOnlyDecompress: false,                     // only if your app returned `checked` untouched
+  payloadOnlyDecompress: false,                     // see the derivation table below
 });
 if (!hasConfigSource()) throw new Error("src/config: setConfigSource() did not take.");
 
