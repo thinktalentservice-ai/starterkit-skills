@@ -19,7 +19,7 @@ Sort them into **mechanism** (goes) and **data** (stays):
 | `ApiUtils` / secure-ls wrapper | `env.<name>.js` (all of them) |
 | `fetch-helpers` / auth fetch | `derive.js` — the service-path map and default host |
 | `envBoolean` (`parseBoolean`/`getEnvBoolean`/`parseNumber`) | every `.env*` |
-| `env-json.mjs` decoder | OAuth authorize/redirect URL builders |
+| `env-json.mjs` decoder — **including any local `NEXT_PUBLIC_` key handling** | OAuth authorize/redirect URL builders |
 | `payload-service` | any app-specific storage-key constants |
 
 ## 1. Install, exact
@@ -64,7 +64,7 @@ is a bridge:
 minimumReleaseAgeExclude:
   # Bridge, not a setting. Delete once the window passes — by then the package
   # installs on its own age, so removing this cannot break resolution.
-  - '@devopsnext/starterkit-config-util@0.1.0' # published 2026-08-28T18:27:37Z
+  - '@devopsnext/starterkit-config-util@0.2.0' # published 2026-08-31T01:14:12Z
 ```
 
 `npm view <pkg> time --json` gives the real timestamp. Never `time.<version>` —
@@ -161,6 +161,34 @@ grep -rn "config/env-json" src/ scripts/
 Both a build script and a browser module usually import it. Point both at
 `@devopsnext/starterkit-config-util/env-json` and delete the local copy — one
 decoder, so the baked values and the fetched values cannot disagree.
+
+**This step CHANGES BEHAVIOUR if your `env.json` is written in `.env` dialect.**
+Since 0.2.0 `decodeEnvJson()` strips a leading `NEXT_PUBLIC_` off every key, so a
+payload of `NEXT_PUBLIC_IDLE_TIME` starts resolving to `appConfig.IDLE_TIME` —
+which is almost always the fix, since those keys were previously landing under
+names nothing read. Check what yours actually contains before and after:
+
+```bash
+node -e "import('@devopsnext/starterkit-config-util/env-json').then(async m=>{
+  const fs=await import('node:fs');
+  const r=m.decodeEnvJson(fs.readFileSync('public/env.json','utf8'));
+  console.log(r.keys, r.sourceKeys, r.renamed, r.collisions);
+})"
+```
+
+Two consequences worth stating before you land it:
+
+- A key that was **silently ignored** starts taking effect. That is the point, and
+  it is still a config change — read the values, do not assume they match your
+  build-time defaults.
+- **Do not write a host-side stripper as part of this step.** The package does it
+  on both decode paths. An app-side copy has to be wired into the build script
+  *and* the browser module, and wiring only one produces a build whose baked and
+  deployed values disagree with no error — the exact failure a single shared
+  decoder exists to prevent.
+
+`sourceKeys` is worth recording in whatever file your build bakes, so a diff still
+answers "which `env.json` produced this" once the prefix is gone.
 
 ## 6. THE STEP EVERYONE SKIPS — restore the gate coverage you just lost
 

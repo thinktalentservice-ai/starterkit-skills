@@ -1,11 +1,11 @@
 ---
 name: starterkit-config-util
-description: Use when adopting, wiring, debugging or extending @devopsnext/starterkit-config-util in a Think Talent frontend — installing or pinning it, writing or editing src/config/index.js, derive.js or env.base.js, reading a config key such as STORAGE_SECRET or OAUTH_SERVICE_URL, adding a health check or connectivity probe, or diagnosing symptoms like "every user appears signed out", "the login page redirects to undefined/oauth/authorize", "env.json overrides are ignored", "ERR_REQUIRE_ESM", or a green build whose service URLs are empty.
+description: Use when adopting, wiring, debugging or extending @devopsnext/starterkit-config-util in a Think Talent frontend — installing or pinning it, writing or editing src/config/index.js, derive.js or env.base.js, reading a config key such as STORAGE_SECRET or OAUTH_SERVICE_URL, adding a health check or connectivity probe, or diagnosing symptoms like "every user appears signed out", "the login page redirects to undefined/oauth/authorize", "env.json overrides are ignored", "env.json keys are NEXT_PUBLIC_-prefixed", "ERR_REQUIRE_ESM", or a green build whose service URLs are empty.
 license: MIT
 compatibility: Requires pnpm 9+ and a Node 18+ frontend that consumes @devopsnext/starterkit-config-util. Some checks reference repo-local gate scripts under scripts/.
 metadata:
   author: thinktalentservice-ai
-  version: "1.0"
+  version: "1.1"
 ---
 
 # starterkit-config-util
@@ -20,10 +20,10 @@ three apps carried byte-identical copies of the same ~140 lines and drifted.
 > document is someone moving one across that line — or the package reading a
 > value the repo stopped defining, in a place no gate can see.
 
-## Read this first: three failure modes that produce a GREEN BUILD
+## Read this first: the failure modes that produce a GREEN BUILD
 
 The package's own README explains the API well. What it cannot tell you is which
-mistakes are silent. These three are, and each has a specific counter below.
+mistakes are silent. These are, and each has a specific counter below.
 
 | Symptom | Cause | Counter |
 |---|---|---|
@@ -31,13 +31,14 @@ mistakes are silent. These three are, and each has a specific counter below.
 | Login dies at the callback with a thrown error. | The secret is *missing*. **Writes do not swallow** — `setCookie`/`setLocalStorage` let `assertSecret` throw. | `hasConfigSource()` self-check + gate assertions |
 | One config key ignores a post-deploy `env.json` while every other key honours it. | Something captured that value at module scope. | Read inside the function, never at module scope |
 | Login redirects to `undefined/oauth/authorize?…`. All routes prerendered. | An env config is missing a key another env defines. | The consumer's env-config gate, kept intact |
+| `env.json` "applies" and changes nothing — its keys land on the config object under names no code reads. | The payload is in a dialect the decoder does not normalise: `REACT_APP_idleTime`, `allowedDomains`. `NEXT_PUBLIC_*` **is** normalised since 0.2.0. | `unknownKeys()`, printed by the build **and** the browser |
 
 ## Quick reference — entries
 
 | Import | Gives you | Peers pulled |
 |---|---|---|
 | `@devopsnext/starterkit-config-util` | `normalizeOrigin`, `createAppConfig`, `setConfigSource`, `getConfig`, `hasConfigSource`, `requiredConfigKeys`, `DEFAULT_CONFIG_KEYS`, `parseBoolean`, `getEnvBoolean`, `parseNumber` | **none** |
-| `…/env-json` | `decodeEnvJson`, `unknownKeys` | react-security-util |
+| `…/env-json` | `decodeEnvJson`, `unknownKeys`, `normalizeEnvJsonKeys`, `describeEnvJsonKeyChanges`, `ENV_JSON_KEY_PREFIX` | react-security-util |
 | `…/storage` | `ApiUtils` (default), `createApiUtils`, `encodeJwtString`, `decodeJwtString`, `hasStorageSecret` | jose, secure-ls, react-security-util |
 | `…/fetch` | `authFetch`, `getJSON`, `postJSON`, `putJSON`, `deleteJSON`, `postFormData`, `postBinary`, `getBlob`, `probeFetch`, `authHeaders`, `getToken`, `createFetchHelpers` | via `…/storage` |
 | `…/payload` | `buildCompressedPayload` | react-security-util |
@@ -71,19 +72,19 @@ Trap 2 below.)
 pnpm add @devopsnext/starterkit-config-util@<version-from-step-1>
 ```
 
-At the time this file was written step 1 answered `0.1.0`, so step 2 was
-`pnpm add @devopsnext/starterkit-config-util@0.1.0`.
+At the time this file was written step 1 answered `0.2.0`, so step 2 was
+`pnpm add @devopsnext/starterkit-config-util@0.2.0`.
 
 `package.json` must end up holding the bare number —
-`"@devopsnext/starterkit-config-util": "0.1.0"`. **Open it and check.**
+`"@devopsnext/starterkit-config-util": "0.2.0"`. **Open it and check.**
 
 **Trap 1 — a one-step install records a range.** Measured against pnpm 11.11.0 on
 a clean project:
 
 | Command | Writes |
 |---|---|
-| `pnpm add …-config-util@0.1.0` | `"0.1.0"` ✅ exact |
-| `pnpm add …-config-util@latest` | `"^0.1.0"` ❌ caret |
+| `pnpm add …-config-util@0.2.0` | `"0.2.0"` ✅ exact |
+| `pnpm add …-config-util@latest` | `"^0.2.0"` ❌ caret |
 
 Same for `@^0`, `@~0.1`, `@*` and a bare `pnpm add <pkg>` — all of them record a
 range. A caret fails any `pinned === installed` gate, and it lets a minor bump
@@ -109,7 +110,7 @@ makes pnpm **create or edit `pnpm-workspace.yaml`** and append:
 
 ```yaml
 minimumReleaseAgeExclude:
-  - '@devopsnext/starterkit-config-util@0.1.0'      # <- no marker, no reason
+  - '@devopsnext/starterkit-config-util@0.2.0'      # <- no marker, no reason
 ```
 
 It installs anyway and the line scrolls past. If your repo runs a release-age gate,
@@ -126,7 +127,7 @@ To keep it (window still open):
 ```yaml
   # Bridge, not a setting. Delete once the window has passed; by then the package
   # installs on its own age, so removing it cannot break resolution.
-  - '@devopsnext/starterkit-config-util@0.1.0' # published 2026-08-28T18:27:37Z
+  - '@devopsnext/starterkit-config-util@0.2.0' # published 2026-08-31T01:14:12Z
 ```
 
 Get the real timestamp with `npm view <pkg> time --json`. **Not**
@@ -170,6 +171,72 @@ reference so a runtime `Object.assign(config, overrides)` overlay reaches it.
 
 `setConfigSource` **throws on an unknown option** — including the easy slip
 `{ storageSecret: … }` instead of `{ keys: { storageSecret: … } }`.
+
+## `env.json` keys — verbatim, minus one prefix
+
+A key in `env.json` **is** the config key. There is no camelCase table and there
+never will be — the decoder carried one once, and it failed in the direction
+nobody notices: a key with no row lands on the config object under a name nothing
+reads, so the override is "applied" and changes nothing.
+
+**Since 0.2.0 `decodeEnvJson()` strips exactly one prefix: `NEXT_PUBLIC_`.**
+
+```
+{"NEXT_PUBLIC_IDLE_TIME": 3600, "INTEGRATION_ALLOWED_DOMAINS": "a.example"}
+              |                                    |
+              v                                    v
+   appConfig.IDLE_TIME                appConfig.INTEGRATION_ALLOWED_DOMAINS
+```
+
+**Why that one is a normalisation and not a translation.** `NEXT_PUBLIC_` is the
+marker that tells the Next compiler to inline a `process.env` read into the client
+bundle. `env.json` never touches `process.env` — it is decrypted and assigned onto
+the config object — so on that side the prefix carries no meaning at all. One rule,
+no table, no key that can fail to have a row. **It stays required in `.env.*`
+files**, where it does mean something: `env.base.js` reads
+`process.env.NEXT_PUBLIC_IDLE_TIME` and re-exports it as `IDLE_TIME`. Two
+namespaces; only the `env.json` side is normalised.
+
+**Why it is in the package and not in your repo.** Every consumer decodes
+`env.json` **twice** — once in a build script that bakes it into the bundle, once
+in the browser that re-applies the deployed copy. A strip written app-side has to
+be wired into both. Wire only one and you get a build whose baked values and
+deployed values disagree about what the file means — with no error. That is the
+failure a shared decoder exists to prevent, so **do not add a host-side
+normaliser**; there is nothing to wire.
+
+**What it cost before 0.2.0**, in a real deployment: the pipeline emitted
+`NEXT_PUBLIC_IDLE_TIME` / `NEXT_PUBLIC_INTEGRATION_ALLOWED_DOMAINS`, those landed
+as three new properties nothing read, and the environments where `env.json` was
+the **only** source for those keys fell back to build-time defaults —
+`INTEGRATION_ALLOWED_DOMAINS = ""` (every domain-gated integration blocked) and an
+idle timeout 3× longer than intended. HTTP 200 throughout, every gate green.
+
+**Both spellings in one payload → the LITERAL key wins, whatever the key order,**
+and the loser is reported in `collisions`. Last-write-wins would make the
+effective config depend on JSON key order: invisible in a diff, unstable across
+whatever wrote the file.
+
+**Say it out loud.** `EnvJsonResult` carries `sourceKeys` (what the file literally
+spelled), `renamed` and `collisions`. Print them on both sides:
+
+```js
+import { decodeEnvJson, describeEnvJsonKeyChanges } from "@devopsnext/starterkit-config-util/env-json";
+
+const decoded = decodeEnvJson(text);
+for (const line of describeEnvJsonKeyChanges(decoded)) console.log(`  · env-json: ${line}`);
+```
+
+A normaliser nobody can see in a log is indistinguishable from a payload that
+never needed one — and those two states want opposite follow-up actions. Record
+`sourceKeys` in whatever file your build bakes, so a diff still answers "which
+`env.json` produced this" after the prefix is gone.
+
+`normalizeEnvJsonKeys()` is exported for a consumer that obtains the decoded
+object by some other route (a plaintext endpoint, a fixture). You rarely need it —
+`decodeEnvJson` already applies it, on the encrypted `configEnv` path *and* the
+plaintext `envVariables` path, because those are one file served by two deployment
+shapes and must not diverge.
 
 ## What must NOT move into the package
 
@@ -270,6 +337,7 @@ decrypt silently fails.
 | Same, but only after an `env.json` edit | `env.json` set `STORAGE_SECRET`. The storage **re-keys whenever the secret value changes**, so everything written under the old one stops decrypting. This is a behaviour change adoption introduces — the local code most apps had built secure-ls once — and there is no option to opt out. | never put `STORAGE_SECRET` in `env.json`; treat it as build-time only, and assert that in your env.json decode step |
 | Login throws at the callback, rather than silently failing | the secret is **missing**, not wrong. `setCookie`/`setLocalStorage` do not swallow. | `hasStorageSecret()` from `…/storage` answers this in one call |
 | One key ignores `env.json`; the rest honour it | that key was captured at module scope | move the read inside a function |
+| EVERY `env.json` key ignored, and the config object grew keys nobody declared | the payload is in a dialect the decoder does not normalise. `NEXT_PUBLIC_*` is stripped since 0.2.0; `REACT_APP_*` and camelCase are not, by design | `unknownKeys()` names them; `sourceKeys`/`renamed` say what the file spelled |
 | `undefined/oauth/authorize` in the built output | an env config is missing a key another defines | your env-config gate, assertions 2/3 |
 | `ERR_REQUIRE_ESM` | something `require()`d it | ESM-only; use `import` |
 | "pressing Start signs me out" | a diagnostic went through `getJSON` | `probeFetch` |
@@ -286,7 +354,9 @@ decrypt silently fails.
 - About to run `pnpm add …@latest`, `@^0`, `@~0.1` or a bare `pnpm add <pkg>` →
   all of them record a **range**. Look the latest version up, then install that
   literal number.
-- `package.json` shows `"^0.1.0"` rather than `"0.1.0"` → re-add with `--save-exact`.
+- `package.json` shows `"^0.2.0"` rather than `"0.2.0"` → re-add with `--save-exact`.
 - About to install the version this file names without re-checking the registry →
-  check first; latest may have moved past 0.1.0.
+  check first; latest may have moved past 0.2.0.
+- About to write a host-side `NEXT_PUBLIC_` stripper for `env.json` → **don't**; `decodeEnvJson` does it since 0.2.0, and an app-side copy has to be wired into *both* decode sites or the baked and deployed values silently disagree.
+- About to "fix" `env.json` by re-keying it → that file is usually **DevOps-owned**. Check who writes it before editing; the decoder is the side that adapts.
 - Gate output says `LOCAL BUILD — pin NOT enforced` → you are on a `file:` tarball; that must never reach a shared branch.
