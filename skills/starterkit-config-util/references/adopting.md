@@ -8,6 +8,7 @@ throughout. Do it on a branch.
 ```bash
 ls src/config/                 # index.js, derive.js, env.base.js, env.<name>.js …
 ls src/api src/controller      # ApiUtils, fetch-helpers, envBoolean, payload-service
+ls public/                     # javascript_integration.js (goes) + .json (stays)
 grep -rn "getEnvBoolean\|parseBoolean\|decodeEnvJson\|deriveServiceUrls" src/ scripts/
 ```
 
@@ -21,6 +22,13 @@ Sort them into **mechanism** (goes) and **data** (stays):
 | `envBoolean` (`parseBoolean`/`getEnvBoolean`/`parseNumber`) | every `.env*` |
 | `env-json.mjs` decoder — **including any local `NEXT_PUBLIC_` key handling** | OAuth authorize/redirect URL builders |
 | `payload-service` | any app-specific storage-key constants |
+| `public/javascript_integration.js` — the fetch/filter/sort/inject loader | `public/javascript_integration.json` — a Jenkins-written MySQL dump, **DevOps-owned** |
+| a `docker/server.js` cheerio `interceptor` block (the same rule, server-side) | the allow-list env var, whatever your app spells it |
+
+The `.js`/`.json` pair in `public/` catches people out. Only one of them is yours:
+the `.json` is generated (`cd public && python3 create_javascript_integration.py`),
+the `.js` never was — it is app code that happens to live in `public/`, hand-ported
+between apps, and it has probably already drifted from the copy it came from.
 
 ## 1. Install, exact
 
@@ -64,7 +72,7 @@ is a bridge:
 minimumReleaseAgeExclude:
   # Bridge, not a setting. Delete once the window passes — by then the package
   # installs on its own age, so removing this cannot break resolution.
-  - '@devopsnext/starterkit-config-util@0.2.0' # published 2026-08-31T01:14:12Z
+  - '@devopsnext/starterkit-config-util@0.4.0' # published 2026-10-07T08:59:34Z
 ```
 
 `npm view <pkg> time --json` gives the real timestamp. Never `time.<version>` —
@@ -91,6 +99,24 @@ keep importing it from `"./derive"`. Consumer gates parse both facts.
 Behaviour change worth knowing: the old `serviceUrl = DEFAULT` default parameter
 applied only to `undefined`, so `deriveServiceUrls(null)` composed `"null/oauth-service"`.
 `normalizeOrigin` folds `null` in with `undefined` and still leaves `""` alone.
+
+**Is one build served from more than one hostname?** Decide it here, because it is
+the same line. If each hostname fronts its own gateway on the same origin as the
+page, use `resolveServiceOrigin` (0.4.0+) instead — identical arguments:
+
+```js
+const origin = resolveServiceOrigin(serviceUrl, DEFAULT_SERVICE_URL);
+// deployed host -> location.origin   localhost -> the configured value   prerender -> ""
+```
+
+With `normalizeOrigin`, every hostname calls the host the build named, at HTTP 200,
+with that environment's data. With `resolveServiceOrigin` the configured value
+becomes "the backend a dev machine talks to" and is ignored on a deployed host —
+so **do not use it if the API is on a different origin from the page**.
+
+Land that swap as its own commit, after the extraction is verified. It changes which
+host every request goes to, and step 3's rule applies: a behaviour change and an
+extraction in one commit make a regression unattributable.
 
 ## 3. `index.js` — thin
 
@@ -190,7 +216,53 @@ Two consequences worth stating before you land it:
 `sourceKeys` is worth recording in whatever file your build bakes, so a diff still
 answers "which `env.json` produced this" once the prefix is gone.
 
-## 6. THE STEP EVERYONE SKIPS — restore the gate coverage you just lost
+## 6. The integration loader — only if you have one
+
+Skip this if `public/javascript_integration.js` (or a `docker/server.js` cheerio
+`interceptor`) does not exist in your repo. If it does, delete the `.js`, keep the
+`.json`, and call the package from a client component instead:
+
+```jsx
+import { loadIntegrations } from "@devopsnext/starterkit-config-util/integrations";
+
+useEffect(() => {
+  ensureRuntimeConfig().then(() => {                    // 1. overlay FIRST
+    if (!appConfig.INTEGRATIONS_ENABLED) return;
+    if (document.documentElement.hasAttribute(ONCE)) return;
+    document.documentElement.setAttribute(ONCE, "");    // 2. guard, SYNCHRONOUSLY
+    return loadIntegrations({
+      sourceUrl: `${appConfig.BASE_PATH || ""}/javascript_integration.json`,
+      allowedDomains: appConfig.INTEGRATION_ALLOWED_DOMAINS || "",
+    })
+      .then((r) => console.debug(`[integration] ${r.executed} script(s) from ${r.selected.length} record(s)`, r))
+      .catch((e) => console.error("[integration] loader failed", e));   // 3. MANDATORY
+  });
+}, []);
+```
+
+**Four things change, and three of them are silent if you get them wrong.**
+
+- **The allow-list is read synchronously at call time**, and on most deployments
+  `env.json` is its only source — `.env.test` / `.env.think` typically set it
+  nowhere. Await the overlay or you get the build-time value forever, while devtools
+  shows a call that looks like it worked.
+- **The once-guard moves out of the `<script id="…">` tag you just deleted.** Write
+  it into the DOM, synchronously, before the first `await`. Awaiting first lets both
+  StrictMode invocations through and you get two widgets, not an error; a
+  module-scope `let` does not survive Fast Refresh.
+- **It rejects.** The old loader swallowed a missing file, an HTTP error and a
+  non-array payload into `console.error`. `.catch()` is not optional now.
+- **Any `window.INTEGRATION_*` globals go away.** They only existed to hand values
+  to a classic `<script>`; they are arguments. That is also one fewer HTTP request.
+
+No teardown. The injected scripts define globals, mount iframes and register
+listeners; removing a `<script>` element undoes none of it, so a cleanup would be
+theatre. The once-guard is what makes the double-invoke safe.
+
+Porting a server-side `interceptor` instead? Take `selectIntegrations` — it is pure,
+it is the whole rule those copies implement by hand, and it pulls no peer dependency.
+
+## 7. THE STEP EVERYONE SKIPS — restore the gate coverage you just lost
 
 Your env-config gate asserts "every `config.KEY` read in `src/` is defined". After
 step 4 the reads live in `node_modules`, where it cannot follow. Two assertions
@@ -235,9 +307,46 @@ a CSS alias prefix — this one correctly ships no CSS. A row shaped like:
 **Do not locate the package with `createRequire(...).resolve(pkg)`.** It throws
 `ERR_PACKAGE_PATH_NOT_EXPORTED` on an ESM-only package, and the error usually
 advises running `pnpm install`, which is not the problem. Read
-`node_modules/<pkg>/package.json` directly.
+`node_modules/<pkg>/package.json` directly. (`createRequire` for one of *your own*
+CommonJS files — a security-headers module, say — is fine; it is pointing it at this
+package that breaks.)
 
-## 7. Prove the new assertions can fail
+**If you did step 6, add a CSP gate too.** `script-src` is maintained by hand and
+the integration table is written by Jenkins, with nothing between them. Disagreement
+is HTTP 200: externals blocked, inline rows still running under `'unsafe-inline'`,
+then `ReferenceError` on a global — a console that blames the integration, not the
+policy.
+
+```js
+import { extractIntegrationOrigins, extractIntegrationUrlHints }
+  from "@devopsnext/starterkit-config-util/integrations";
+// resolve the governing directive in this order: script-src-elem, script-src, default-src.
+// origins  -> fail    hints -> warn only, never fail
+```
+
+Three ways to get that gate wrong:
+
+- **Reading only `script-src`.** On a policy that uses `script-src-elem` or falls
+  back to `default-src` you compare against an empty list and report every origin as
+  missing — a gate lying in the loud direction, which is how allow-list bolt-ons
+  get added.
+- **Treating `'self'` (or any quoted keyword, hash or nonce) as satisfying a
+  cross-origin `src`.** That turns every real finding green.
+- **Dropping the hints pass because it is noisy.** A row that assigns
+  `r.src = "https://…"` from an inline script is invisible to any attribute scan, so
+  without hints the gate goes green the moment the attribute origins are added while
+  that widget stays blocked.
+
+**Print nothing from `INTEGRATION_TEXT`** — live rows embed an AES key as a literal.
+Origins and record labels are safe; the text is not.
+
+**Expect this gate to be red on the day you add it, and mount it accordingly.** Its
+fix — widen the CSP, or turn integrations off — is a human decision no build can
+make. Put it where a person sees it (a local `prebuild`), not in the deploy-path gate
+set, where a permanently-red gate earns itself a skip flag. State the cost out loud
+in the script: deploy builds keep shipping that CSP and this gate will not stop them.
+
+## 8. Prove the new assertions can fail
 
 An assertion nobody has watched fail is decoration. Run each, confirm it fires,
 revert:
@@ -246,8 +355,15 @@ revert:
 2. Comment out the `setConfigSource(…)` call → assertion B must fail.
 3. Set `NEXT_PUBLIC_APP_ENV=constructor` and build → must fail naming the value and
    the known environments. (Before adoption this built green with empty service URLs.)
+4. If you added the CSP gate: remove one third-party origin from `script-src` → it
+   must fail naming that origin and the rows that load it.
+5. If you switched to `resolveServiceOrigin`: point `NEXT_PUBLIC_SERVICE_URL` at a
+   host that does not exist, build, and serve the output from a non-loopback
+   hostname → every request must still go to the serving origin. On `localhost` the
+   same build must try the bogus host and fail. (A unit test of the no-location case
+   passes `null` — `undefined` selects jsdom's `localhost`.)
 
-## 8. Verify
+## 9. Verify
 
 ```bash
 pnpm <your gate script>
@@ -261,9 +377,25 @@ fetch path work end to end; a login can. Watch for zero 401s — and if you reus
 saved session, remember an expired token 401s for reasons that have nothing to do
 with your change.
 
-## 9. Do not skip
+**If you switched to `resolveServiceOrigin`, do that run on a second hostname.** The
+bug it fixes is invisible on the host the build named, and invisible to `grep` — the
+configured host is still inlined for the loopback branch. Only the network panel on a
+*different* host shows where requests go. Emitted HTML carrying root-relative service
+URLs is correct: the prerender has no location and deliberately names no host.
+
+**If you did step 6, that run has to cover the integrations too — in a real browser,
+because nothing else can.** Confirm the export emits the `.json` and no `.js`; then
+check the count of scripts and records against the table and their order, that
+reloading under StrictMode produces no duplicates, that the globals the rows define
+exist, that any legacy `window.INTEGRATION_*` is now `undefined`, and that a
+domain-gated row does **not** run on a non-allow-listed host. One row's external
+genuinely 404ing while the rest still run is the correct behaviour, not a failure.
+
+## 10. Do not skip
 
 - The exact pin. A caret lets a minor bump change how every API response is parsed.
 - Deleting the release-age bridge once its window passes.
 - Recording, in your repo's instruction file, *why* `derive.js` and `env.base.js`
   stayed — otherwise the next person "finishes the job" and moves them.
+- The `.catch()` on `loadIntegrations`, and the reason the once-guard is written
+  before the first `await`. Both look removable and neither is.
