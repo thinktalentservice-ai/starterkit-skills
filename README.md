@@ -22,6 +22,24 @@ npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --list
 npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill starterkit-button -a claude-code -a cursor
 ```
 
+## Update
+
+If a skill is already installed, update it in place rather than re-adding it:
+
+```bash
+# update one already-installed skill
+npx skills update starterkit-button
+
+# update everything installed in the current project
+npx skills update
+
+# update only global (user-level) skills
+npx skills update -g
+
+# skip the scope prompt (auto-detects project vs. global)
+npx skills update -y
+```
+
 `npx skills remove` uninstalls interactively.
 
 ## Skills
