@@ -1,6 +1,6 @@
 ---
 name: starterkit-layout
-description: Use when building, wiring, restyling, reviewing or migrating the dashboard shell of an app that uses @devopsnext/starterkit-layout — the topbar/header, vertical sidebar, navigation list, header dropdowns, profile menu, mobile drawer, mini-sidebar collapse, brand marks or auth-page logo; when installing or pinning the package; when a nav row must run a script instead of navigating; and when diagnosing symptoms like the shell rendering as a broken vertical stack, the mobile drawer visible below `lg`, a tenant logo painted 32×32 inside a gradient box, the content column reading grey in light mode, a nav row that never highlights, a CLICK row that silently does nothing, `Invalid hook call` after a `link:` install, or a profile photo that 401s and always falls back to initials.
+description: Use when building, wiring, restyling, reviewing or migrating the dashboard shell of an app that uses @devopsnext/starterkit-layout — the topbar/header, vertical sidebar, navigation list, header dropdowns, profile menu, page footer, mobile drawer, mini-sidebar collapse, brand marks or auth-page logo; when installing or pinning the package; when a nav row must run a script instead of navigating; and when diagnosing symptoms like the shell rendering as a broken vertical stack, the mobile drawer visible below `lg`, a tenant logo painted 32×32 inside a gradient box, the content column reading grey in light mode, a nav row that never highlights, a CLICK row that silently does nothing, `Invalid hook call` after a `link:` install, or a profile photo that 401s and always falls back to initials.
 license: MIT
 compatibility: React 18+ consumer, ESM or CJS, Node 18+. Peers — react, react-dom, reactstrap >= 9.2, motion >= 12, simplebar-react >= 3.3. NO framework peer since 1.4.0. The host must already load Bootstrap 5.3 utility CSS. Install commands shown for pnpm; npm and yarn work the same way.
 metadata:
@@ -11,7 +11,7 @@ metadata:
 # starterkit-layout
 
 `@devopsnext/starterkit-layout` is the Obsidian dashboard shell — `FullLayout`, the `Header` chrome,
-the vertical `Sidebar`, the brand marks and `ProfileMenu`. It exists so a fork of the starter kit
+the vertical `Sidebar`, the brand marks, `ProfileMenu` and `Footer`. It exists so a fork of the starter kit
 stops copy-pasting `layouts/` and re-deriving the same bugs.
 
 **Controlled, stateless, slot-based. The package holds the mechanics; you keep the data, the store
@@ -25,10 +25,10 @@ and the content.**
 
 | | |
 |---|---|
-| Package version | **1.4.1** — npm `latest` on 2026-08-31, published 2026-08-28T14:09:37Z |
-| `dist/index.d.ts` | `19ff42d79243` — sha256, first 12 hex ([command](#staleness--how-to-re-derive)) |
-| `dist/brand.d.ts` | `9b9aa264267d` |
-| `styles.css` | `5b4f865e944a` — 52 `il-*` classes, 16 `--il-*` geometry properties, 29 `--il-t-*` token aliases |
+| Package version | **1.5.2** — npm `latest` on 2026-11-20, published 2026-11-19T10:17:52Z. **1.5.1 was never published to npm** — its sidebar row fix first shipped in 1.5.2; 1.5.0 (2026-11-05T05:30:56Z) added `Footer` |
+| `dist/index.d.ts` | `febbbed54173` — sha256, first 12 hex ([command](#staleness--how-to-re-derive)) |
+| `dist/brand.d.ts` | `9b9aa264267d` (unchanged since 1.4.1) |
+| `styles.css` | `07f3751166da` — 59 `il-*` classes, 18 `--il-*` geometry properties, 29 `--il-t-*` token aliases |
 | Source | <https://github.com/thinktalentservice-ai/starterkit-layout> |
 | npm | <https://www.npmjs.com/package/@devopsnext/starterkit-layout> |
 | Reference wiring | `template-starterkit-nextjs` → `src/app/(DashboardLayout)/DashboardShell.jsx` |
@@ -40,9 +40,11 @@ is behind.
 
 **How much to trust each section:** the prop, slot, hook, geometry and class tables are derived from
 `dist/index.d.ts`, `dist/brand.d.ts`, `src/types.ts` and `styles.css` — authoritative. *Choosing*,
-*Anti-patterns* and *Red flags* are judgement. **There is no published Storybook** — the `storybook`
-scripts are in `package.json` but no config and no stories are committed, so nothing renders from a
-URL. Read the reference wiring instead.
+*Anti-patterns* and *Red flags* are judgement. **Storybook exists in the repo but is not a reference
+you can open from a URL** — since 1.5.1 the repo commits a `.storybook/` config, `src/**/*.stories.tsx`
+and a built static site in `docs/`, none of it shipped in the npm package, and the repo's GitHub Pages
+URL answered 404 when checked (2026-11-20). Run `pnpm storybook` in a checkout, or read the reference
+wiring instead.
 
 ## Install — always the latest version, always pinned exactly
 
@@ -65,20 +67,20 @@ Or read it off the package page — the version is at the top right:
 pnpm add @devopsnext/starterkit-layout@<version-from-step-1>
 ```
 
-At the time this file was written step 1 answered `1.4.1`, so step 2 was:
+At the time this file was written step 1 answered `1.5.2`, so step 2 was:
 
 ```bash
-pnpm add @devopsnext/starterkit-layout@1.4.1
+pnpm add @devopsnext/starterkit-layout@1.5.2
 ```
 
-`package.json` must end up holding the bare number — `"@devopsnext/starterkit-layout": "1.4.1"`.
-**Open it and check.** If your client widened it to `"^1.4.1"`, re-add with `--save-exact`
+`package.json` must end up holding the bare number — `"@devopsnext/starterkit-layout": "1.5.2"`.
+**Open it and check.** If your client widened it to `"^1.5.2"`, re-add with `--save-exact`
 (npm/pnpm) or `--exact` (yarn).
 
 **Why not `@latest`.** It installs the same code, but every client writes a **caret** range instead
 of the number. A caret lets a later minor bump move the whole app's chrome — every page, not one
 component — with no review and no diff, and it fails any `pinned === installed` check. Same for
-`@^1`, `@~1.4`, `@*` and a bare `pnpm add <pkg>`. The point of step 1 is not to avoid new versions;
+`@^1`, `@~1.5`, `@*` and a bare `pnpm add <pkg>`. The point of step 1 is not to avoid new versions;
 it is to take the newest one **deliberately**, on a line someone can review. Upgrading is the same
 two steps, then [Staleness](#staleness--how-to-re-derive) before trusting the tables here.
 
@@ -119,13 +121,14 @@ document load. Nothing here imports `next`.
 
 | Import | Contains | Runtime imports |
 |---|---|---|
-| `@devopsnext/starterkit-layout` | shell, sidebar, header, hooks, all four brand marks, `ProfileMenu` | the peers above |
+| `@devopsnext/starterkit-layout` | shell, sidebar, header, hooks, all four brand marks, `ProfileMenu`, `Footer` | the peers above |
 | `@devopsnext/starterkit-layout/brand` | `BrandMark`, `Logo`, `AuthLogo`, `DEFAULT_BRAND_NAME` | **`react/jsx-runtime` only** |
 | `@devopsnext/starterkit-layout/styles.css` | the entire visual definition | — |
 
 `./brand` exists so a login page — which renders outside the shell — can show the brand without
 pulling reactstrap, simplebar and motion into that route's bundle. **`Favicon` is deliberately not
-there**: it needs `motion` for its collapse animation.
+there**: it needs `motion` for its collapse animation. `Footer` is not there either — it is main-entry
+only (`./brand` is the brand marks and nothing else).
 
 Import the stylesheet **once**, at the app root:
 
@@ -181,6 +184,7 @@ basePath logout, the brand-only auth page, a hand-assembled shell:
 | `container` `containerClassName` | children are wrapped in a reactstrap fluid `Container` — defaults `true` and `"p-4"`. `container={false}` renders them raw |
 | `mobileSidebarId` | the drawer's `id` and the hamburger's `aria-controls`. Default `"il-mobile-sidebar"` |
 | `className` `contentClassName` | extra classes on the shell root and on the content column |
+| `footer` | `ReactNode`, no default — pass a `<Footer />`. See [`Footer`](#footer) |
 
 ## Slots — where each one lands
 
@@ -195,6 +199,8 @@ shell package has no data to search and no business deciding where logout goes.
 - **Sidebar:** `sidebarHeader` replaces the default user block entirely (`null` removes it),
   `sidebarUser` — `{ initials?, name?, avatar? }` — fills it, and `sidebarFooter` renders after the
   nav, inside the scroller.
+- **Content column:** `footer` renders after `children` — *outside* the fluid `Container`, so it is
+  not inset by `containerClassName` — at the bottom of `.il-content-area`.
 
 ### `HeaderDropdownSlot`
 
@@ -248,6 +254,18 @@ trailing slashes are normalised, root is held to an exact match, and the row who
 longest prefix of the current one gets `.il-active-link` — a group containing it opens itself.
 Nothing matches during SSR and hydration's first pass, so the highlight arrives one commit later by
 design rather than mismatching the server HTML.
+
+**Row rhythm is fixed (1.5.1, shipped in 1.5.2).** A nav row is `--il-row-height` (40px) tall and a
+child row inside a group `--il-sub-row-height` (36px), with zero vertical padding, and the gap between
+rows is one 8px `margin-bottom` on `.il-sidebar-area .nav-link` — so expanded and collapsed rows are
+the same height and the column does not change rhythm when the sidebar toggles. Before 1.5.1 a row was
+padding plus its tallest child (10px padding, 2px gap; leaf rows also carried an `mb-2` utility, so
+leaves sat 8px apart and everything else 2px). Rows no longer carry `mb-2`, and the `.il-sidebar-nav`
+wrapper no longer carries `pt-1 mt-2`; app CSS that targeted those, or re-tuned the old padding or
+margin on `.nav-link`, needs revisiting. In the collapsed rail (`lg` and up), hover no longer scales or
+slides the icon and label (`transform: none !important` on `.il-is-mini` rows), revealed labels fade in
+over 0.2s (off under `prefers-reduced-motion`), and section captions are hidden with `visibility` so
+they keep their height.
 
 ### `toNavItems` — raw API rows → `NavItem[]`
 
@@ -369,6 +387,32 @@ becomes `role="img"` with the letters as its label, because it is then the only 
 it works in `next dev` and 404s deployed. Where to point it, and the photo fetch:
 [references/wiring.md](references/wiring.md).
 
+## `Footer`
+
+The page footer (1.5.0). It goes in `FullLayout`'s `footer` slot, or at the bottom of a
+hand-assembled shell. A `<footer>` on a three-column grid — `startSlot`, centre, `endSlot`.
+
+| Prop | |
+|---|---|
+| `year` | `number \| string`, default the current year. Pass it explicitly on a statically exported page — the default is read at render, so a build cut on 31 December and served after midnight hydrates against a different year (the default is rendered with `suppressHydrationWarning`) |
+| `siteName` | `ReactNode`, shown after the `©` and a `\|` separator. Absent or empty → no name and no separator |
+| `siteHref` | where `siteName` points. Without it the name is plain text. The link opens in a new tab (`target="_blank"`, `rel="noopener noreferrer"`) |
+| `startSlot` `endSlot` | the side columns. A language picker or a version string belongs in `endSlot`. Both columns stay in the DOM when empty, so the centre stays centred on the page |
+| `children` | **replaces the whole centre** (`© year \| siteName`) — legal links, a status badge. `year` and `siteName` are then ignored |
+| `className` | extra class on the `<footer>` |
+
+```jsx
+import { FullLayout, Footer } from "@devopsnext/starterkit-layout";
+
+<FullLayout footer={<Footer siteName="Think Talent" siteHref="https://example.com" />} … />
+```
+
+Content is props and slots only — **no i18n and no language `<select>`** (the source's one never
+worked and was dropped). Translate in the host and hand over the string. When `footer` is present
+the content column gets `.il-has-footer` and becomes a flex column that pins the footer to the
+bottom on a short page; with no footer the column stays the plain block it was. Below `md`
+(767.98px) the three columns stack, and an empty side column is dropped.
+
 ## Hooks
 
 The three `FullLayout` already calls, exported so a hand-assembled shell does not re-derive them.
@@ -390,13 +434,13 @@ small parts; the constants are `LG_BREAKPOINT` (992), `LG_QUERY`, `DEFAULT_MOBIL
 
 ## The two namespaces — package-owned, do not redefine
 
-- **`.il-*`** — 52 classes. `.il-shell` and `.il-brand` are **also the token alias scope**
+- **`.il-*`** — 59 classes. `.il-shell` and `.il-brand` are **also the token alias scope**
   (`:is(.il-shell, .il-brand)`), so redefining either is not merely a style clash — it can strand the
   alias block.
 - **`--il-t-*`** — 29 vendored token aliases, each `--il-t-X: var(--X, <vendored default>)`.
   **Generated** upstream by `pnpm sync:tokens`. Never hand-edit one and never set one yourself; set
   the design token it reads.
-- **`--il-*`** (one dash) — 16 geometry properties this package owns, absent from the token sheet.
+- **`--il-*`** (one dash) — 18 geometry properties this package owns, absent from the token sheet.
   The one-dash difference is what keeps the codegen's scraper off them. **This is the layer you
   override**, and it must be declared on `.il-shell`.
 
@@ -455,6 +499,9 @@ equal-specificity caveat against Bootstrap: [references/namespace.md](references
 - **You are bumping from ≤1.3.x.** 1.4.0 dropped the Next.js peer: rows are plain anchors, and
   `pathname` no longer drives active matching. A nav row you expected to client-navigate is now a
   document load.
+- **You are bumping from ≤1.4.1.** 1.5.1 (shipped as 1.5.2 — 1.5.1 was never published) changed the
+  sidebar's row box: fixed 40px/36px row heights, one 8px gap, no `mb-2` on rows. A pixel-tuned
+  override of `.nav-link` padding or margin, or a selector on `.nav-link.mb-2`, no longer lands.
 - **You are writing a colour, radius or shadow literal into a shell override.** Everything the shell
   paints comes from a design token — see the `starterkit-theme` skill.
 - **You are adding a CSS rule for an `.il-*` class that also carries a Bootstrap component class**

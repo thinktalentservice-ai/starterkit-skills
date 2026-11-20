@@ -72,7 +72,7 @@ is a bridge:
 minimumReleaseAgeExclude:
   # Bridge, not a setting. Delete once the window passes — by then the package
   # installs on its own age, so removing this cannot break resolution.
-  - '@devopsnext/starterkit-config-util@0.4.0' # published 2026-10-07T08:59:34Z
+  - '@devopsnext/starterkit-config-util@0.4.1' # published 2026-11-19T09:21:15Z
 ```
 
 `npm view <pkg> time --json` gives the real timestamp. Never `time.<version>` —

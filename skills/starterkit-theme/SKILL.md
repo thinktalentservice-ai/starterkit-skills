@@ -11,8 +11,9 @@ metadata:
 # starterkit-theme
 
 `@devopsnext/starterkit-theme` is the token engine every other `@devopsnext/starterkit-*` package
-reads. It publishes **205 CSS custom properties** on `:root` plus a light-scheme override block, and
-optionally a MUI theme wired to the same variables.
+reads. It publishes **205 CSS custom properties** on `:root` (each shipped sheet declares 207 — the two
+extra are the `--tokens-version` / `--tokens-brand` provenance pair) plus a light-scheme override
+block, and optionally a MUI theme wired to the same variables.
 
 **Never write a colour literal. Pick a token by JOB.**
 
@@ -25,22 +26,46 @@ optionally a MUI theme wired to the same variables.
 
 | | |
 |---|---|
-| Package version | **1.4.1** — npm `latest` on 2026-08-31, published 2026-08-31T16:40:19Z |
-| `TOKENS_VERSION` | `9451b3ea404a` |
-| Root tokens | **205** (`ROOT_TOKEN_NAMES.length`); 100 of them differ in the light block |
-| Type-surface fingerprint | `0e940b45aeac` |
+| Package version | **1.5.1** — npm `latest` on 2026-11-20, published 2026-11-18T10:11:19Z |
+| `TOKENS_VERSION` | `9451b3ea404a` (the same hash as 1.4.1 — the name set did not change) |
+| Root tokens | **205** (`ROOT_TOKEN_NAMES.length`); the light block declares **100** (`LIGHT_TOKEN_NAMES.length`) — not all of them differ from dark any more |
+| Light-name fingerprint | `9529c7a66ab1` — sha256 of `LIGHT_TOKEN_NAMES.join('\n')`, first 12 hex (was `0f646c594950` at 1.4.1). See [Staleness](#staleness--how-to-re-derive) |
+| Type-surface fingerprint | **not re-derived.** The 1.4.1 value `0e940b45aeac` came from a method this skill never recorded, and could not be reproduced from the published `dist/*.d.ts` by any obvious hash, so it is dropped rather than guessed. The type surface did change: `PresetConfig.overrides`, `PresetSpec.overrides`, the `Tuning` type and `SerializeOptions.alwaysLight` are new |
 | Source | <https://github.com/thinktalentservice-ai/starterkit-theme> |
 | npm | <https://www.npmjs.com/package/@devopsnext/starterkit-theme> |
 
 **How much to trust each section:** the suffix table, token inventory, entry-point map, preset values
-and MUI mapping are derived from the **published 1.4.1 tarball** — `dist/*.d.ts`, `presets/*.css`,
-`schema.json` — and from `src/presets/base.ts` / `src/engine/ladder.ts` in the source repo.
-Authoritative. *Choosing*, *Anti-patterns* and *Red flags* are judgement. If the installed version has
-moved past 1.4.1, see [Staleness](#staleness--how-to-re-derive) before trusting a table.
+and MUI mapping are derived from the **published 1.5.1 tarball** — `dist/*.d.ts`, `dist/mui.js`,
+`presets/*.css`, `schema.json` — and from `src/presets/{base,tuning,think,elemetrik}.ts` /
+`src/engine/ladder.ts` in the source repo. Authoritative. *Choosing*, *Anti-patterns* and *Red flags*
+are judgement. If the installed version has moved past 1.5.1, see
+[Staleness](#staleness--how-to-re-derive) before trusting a table.
 
 `TOKENS_VERSION` is the package's own content hash **over the token NAME set** — it moves when the
-contract changes, not on every rebuild. That makes it the right drift signal: if it still reads
-`9451b3ea404a`, no token was added, renamed or deleted, whatever the version number says.
+contract changes, not on every rebuild. If it differs from `9451b3ea404a`, a token was added, renamed
+or deleted. **If it matches, that proves much less than it used to:** 1.4.1 → 1.5.1 left the hash and
+both counts untouched while changing almost every colour *value*, nine light-block memberships, the
+light radii and the scheme behaviour of several fills. The hash is a names-only signal; values need a
+sheet diff.
+
+### What changed in the 1.4.1 → 1.5.1 window
+
+Read this before trusting an older mental model of the package. Each item is detailed where it
+belongs below.
+
+- **1.4.4** — the MUI theme paints contained `Button`, `Fab`, filled `Chip` and `Badge` from the
+  `-solid` rung with the `-on-solid` label (it used to use the mark rung behind a `contrastText` label).
+- **1.4.5** — think's primary seed is `#008AFF` (was `#37A3FE`); the fill **is** the seed and the label
+  is pinned white. The `info` seed became `#37A3FE` in both presets.
+- **1.5.0** — a **hand-tuned palette layer** (`PresetSpec.overrides`, `src/presets/tuning.ts`) applied
+  through `resolveBrand`, per scheme; think and elemetrik tuned to the palette sign-off. Flat
+  gradients, one white light plane, light radii 8/6/12, no coloured glows in light, `-on-solid` white
+  for every family. Per the git history, 1.5.0's sheets still used literal-hex flat-gradient stops and
+  declared different light blocks (think 102 names, elemetrik 100).
+- **1.5.1** — flat gradients use `var()` stops; **every preset sheet declares the same light-block name
+  set** (`serializeBrandCss` gained `alwaysLight` for this); default heading and body font is
+  **Poppins** (was Plus Jakarta Sans); regenerated token ABI.
+- The registry has no 1.4.2 or 1.4.3 — 1.4.1 was followed directly by 1.4.4.
 
 ## Install — always the latest version, always pinned exactly
 
@@ -65,19 +90,19 @@ see the history.)
 pnpm add @devopsnext/starterkit-theme@<version-from-step-1>
 ```
 
-At the time this file was written step 1 answered `1.4.1`, so step 2 was:
+At the time this file was written step 1 answered `1.5.1`, so step 2 was:
 
 ```bash
-pnpm add @devopsnext/starterkit-theme@1.4.1
+pnpm add @devopsnext/starterkit-theme@1.5.1
 ```
 
-`package.json` must end up holding the bare number — `"@devopsnext/starterkit-theme": "1.4.1"`.
-**Open it and check.** If your client widened it to `"^1.4.1"`, re-add with `--save-exact`
+`package.json` must end up holding the bare number — `"@devopsnext/starterkit-theme": "1.5.1"`.
+**Open it and check.** If your client widened it to `"^1.5.1"`, re-add with `--save-exact`
 (npm/pnpm) or `--exact` (yarn).
 
 **Why not just `@latest`.** It installs the same code, but every client writes a **caret** range
 instead of the number. A caret lets a later minor bump change every colour on the screen with no
-review and no diff, and it fails any `pinned === installed` check. Same for `@^1`, `@~1.4`, `@*` and a
+review and no diff, and it fails any `pinned === installed` check. Same for `@^1`, `@~1.5`, `@*` and a
 bare `pnpm add <pkg>` — all of them record a range. The point of step 1 is not to avoid new versions;
 it is to take the newest one **deliberately**, on a line someone can review.
 
@@ -101,6 +126,9 @@ import "@devopsnext/starterkit-theme/styles.css";           // structural CSS th
 `.mesh-bg{,-subtle}`, `.text-gradient-{role}`, `.glow-{role}`, `.status-chip`, a `--ic-card-focus-ring`
 correction for the card package, `box-sizing` on `*`, and a `body` background/colour/font. The
 package README calls it "Think's static token sheet" — **the file is right and the README is wrong.**
+(The published 1.5.1 README still says so; the source repo's README was corrected after that release,
+so a later version may not. `styles.css`, `bootstrap-bridge.css` and `schema.json` are identical
+between 1.4.1 and 1.5.1.)
 A preset sheet (`presets/<id>.css`) or an SSR-injected brand block is the token source; `styles.css`
 alone gives you 205 `var()`s resolving to nothing.
 
@@ -118,15 +146,15 @@ the nine roles: `primary` `secondary` `accent` `success` `warning` `danger` `inf
 |---|---|---|---|---|
 | `--{f}` | the **non-text mark** — ramp slot 2, follows the scheme | **3.0:1** (WCAG 1.4.11), both schemes | any *meaningful* border, an icon, a status dot, a selected/focus edge, a chart stroke | body text; a filled background |
 | `--{f}-text` | the family **as text** — ramp slot 1 | **4.5:1** (WCAG 1.4.3), both schemes | the family colour applied to words | fills, borders |
-| `--{f}-solid` | **the fill.** Scheme-invariant — one hex in both schemes | none directly (its *label* is measured instead) | button/chip/badge background, gradient stops, anything that must read as "the brand's colour" | text on a surface — it may be illegible there, which is the point of `-text` |
-| `--{f}-solid-hover` | `-solid` mixed **8%** toward ink `#0b0f19` | none | hover/active of a `-solid` fill; end stop of `--gradient-{f}` | resting fills |
-| `--{f}-on-solid` | **measured ink** — `#0b0f19` or `#ffffff`, scored against the *worse* of `-solid` and `-solid-hover` | it is the answer to a duty | `color:` whenever the background is `--{f}-solid`, `--{f}-solid-hover` or `--gradient-{f}` | text on `--{f}-bg` (a tint over the surface → use `--fg1`) |
-| `--{f}-bg` | **the tint** — alpha of the *mark*, 0.14 dark / 0.10 light | none | soft chip/callout/alert background, hover wash of a tinted row | as a fill under `-on-solid` |
-| `--{f}-border` | **decorative** subtle border — alpha of the mark, 0.42 dark / 0.36 light. Measures **1.7–3.0:1 and is not meant to clear 3:1** | explicitly none | the edge of a tinted chip or callout, decoration only | **any border that carries meaning** — outline button, focus ring, selected state |
+| `--{f}-solid` | **the fill.** The engine makes it scheme-invariant, but the 1.5.x presets hand-tune some per scheme — see the note below the table | none directly (its *label* is measured instead) | button/chip/badge background, gradient stops, anything that must read as "the brand's colour" | text on a surface — it may be illegible there, which is the point of `-text` |
+| `--{f}-solid-hover` | `-solid` mixed **8%** toward ink `#0b0f19` (the engine rule; the shipped presets carry hand-set values that sit close to it) | none | hover/active of a `-solid` fill; end stop of `--gradient-{f}` | resting fills |
+| `--{f}-on-solid` | the label ink — `#0b0f19` or `#ffffff`. **Measured** (scored against the *worse* of `-solid` and `-solid-hover`) for a custom brand's `secondary`/`accent`; **pinned `#ffffff`** for `primary`, and `#ffffff` for all nine families on the shipped presets | it is the answer to a duty (which the shipped white labels on lime/amber/green do not meet) | `color:` whenever the background is `--{f}-solid`, `--{f}-solid-hover` or `--gradient-{f}` | text on `--{f}-bg` (a tint over the surface → use `--fg1`) |
+| `--{f}-bg` | **the tint** — a wash of the *mark* (engine rule: alpha 0.14 dark / 0.10 light; the shipped presets use tuned alphas dark and **opaque hex tints in light**) | none | soft chip/callout/alert background, hover wash of a tinted row | as a fill under `-on-solid` |
+| `--{f}-border` | **decorative** subtle border — a tint of the mark (engine rule: alpha 0.42 dark / 0.36 light; shipped presets 0.40 dark, 0.22–0.50 light). Measures **about 1.3–2.7:1 on the 1.5.1 presets** (composited over `--surface`; 1.7–3.0:1 on the engine's untuned derivation) **and is not meant to clear 3:1** | explicitly none | the edge of a tinted chip or callout, decoration only | **any border that carries meaning** — outline button, focus ring, selected state |
 | `--{f}-channel` | `"R G B"` triple **of the mark** | — | `rgb(var(--{f}-channel) / 0.3)` when you need an alpha the ABI does not publish | anywhere `-bg`/`-border` already gives the right alpha |
-| `--gradient-{f}` | `linear-gradient(135deg, --{f}-solid, --{f}-solid-hover)` — one family only | its label is `--{f}-on-solid` by construction | gradient fill of that tone | when you want two different families |
-| `--glow-{f}` | brand halo `box-shadow`, coloured by the **mark**. Scaled by `intensity` | — | hero/CTA/active-card halo | depth — that is `--shadow-card` |
-| `--shadow-btn-{f}` | `0 4px 20px`, coloured by the **seed fill**. Scaled by `intensity` | — | a raised filled button of that tone | non-button surfaces |
+| `--gradient-{f}` | engine rule `linear-gradient(135deg, --{f}-solid, --{f}-solid-hover)`; **on the 1.5.x presets a flat fill**, `linear-gradient(var(--{f}-solid), var(--{f}-solid))` — one family only | its label is `--{f}-on-solid` by construction | gradient fill of that tone | when you want two different families |
+| `--glow-{f}` | brand halo `box-shadow`, coloured by the **mark**. Scaled by `intensity`. **`none` in the light scheme** | — | hero/CTA/active-card halo | depth — that is `--shadow-card` |
+| `--shadow-btn-{f}` | `0 4px 20px`, coloured by the **seed fill**. Scaled by `intensity`. **`none` in the light scheme** | — | a raised filled button of that tone | non-button surfaces |
 
 **`--{f}-border` is the single most likely token to be picked wrong.** The name reads like "the
 border colour for this family" and it explicitly is not one for anything meaningful. An outline button
@@ -135,22 +163,63 @@ shipped at 1.56:1 because of exactly this. **Default to `--{f}` for borders.**
 **Why the split exists:** the old sheet had one `--mint` doing both the text job and the mark job, so
 it was solved for the stricter duty and then spent on fills — which is how a lime brand rendered
 olive. Three distinct things now: **text** (4.5:1, moves per scheme), **mark** (3.0:1, moves per
-scheme), **fill** (scheme-invariant).
+scheme), **fill** (one hex by the engine's rule; see the hand-tuned note below).
 
 ### The one exception to "the fill is never darkened"
 
-`--primary-solid` **is** darkened, and only `primary`, and only far enough to clear **4.5:1 against
-white** (`SOLID_WHITE_FLOOR = 4.5`). On think this moves the seed `#37a3fe` to a rendered
-`--primary-solid: #007acd`, and `--primary-on-solid` comes out `#ffffff` on **both** presets.
+The engine can darken `--primary-solid` — only `primary`, and only when the seed carries white worse
+than `SOLID_WHITE_FLOOR`. **That floor is `2.5` at 1.5.1** (it was 4.5 at 1.4.1, which sank think's
+old `#37a3fe` seed to `#007acd`). Think's seed is now `#008AFF`, white on it is 3.45:1, so the floor
+sits below it and `sink` returns the seed untouched — the fill **is** the seed. The mechanism remains
+for tenant seeds paler than about 2.5:1, where a white label would be unreadable on any terms.
+
+`--primary-on-solid` is **pinned to white** for every brand (`candidates: [FILL_WHITE]`), not measured —
+the ink crossover is 4.376:1, so measuring a 3.45:1 blue would hand it the dark label. That is a
+recorded owner decision (2026-11-05) and a known cost: on think, white reads **3.45:1** on the light
+fill `#008aff` and **2.74:1** on the dark fill `#3aa0ff` (my measurement of the shipped hexes) —
+below 4.5:1 text contrast. Elemetrik's violet carries white at 5.93:1.
 
 Read that as: **`--{f}-solid` is not guaranteed to equal the seed, and `--{f}-on-solid` is not
-guaranteed to be dark ink.** Both are outputs of a measurement. Never hardcode either. The ink
-candidate list is unchanged by the floor — white wins because the backdrop moved, not because white
-was preferred.
+guaranteed to be dark ink — on the shipped presets it is white for all nine families.** Never
+hardcode either; read the token.
 
 The eight other families are unfloored, deliberately: solving a brand *hue* for the stricter job is
-what turned a lime brand olive. The floor is scoped to a blue whose only failing job was carrying
-white.
+what turned a lime brand olive. The floor is scoped to `primary`.
+
+### The hand-tuned palette
+
+From 1.5.0 the shipped presets carry a **reviewed tuning layer** on top of what the engine derives —
+`PresetSpec.overrides` (shared values in `src/presets/tuning.ts`, per-brand in `think.ts` /
+`elemetrik.ts`), applied by `resolveBrand` per scheme. It runs in three places so downstream tokens
+(`-bg`, `-border`, glows, channels) derive from the tuned mark, and **every duty is still measured
+against the final values**: a miss lands in `warnings`, it is not suppressed. The source's own header
+comments describe the *engine* derivation (a floored `#007acd` fill, olive light-mode lime); **where
+they contradict the sheets, the tuning is what ships.**
+
+What it changed, as it shows up in the shipped sheets:
+
+- **Fills.** Think's primary is one blue everywhere: `#3aa0ff` dark, `#008aff` light — and `info` is
+  that same blue in **both** presets. `--primary-solid`, `--info-solid` and `--secondary-solid` therefore
+  **differ between schemes** (elemetrik's primary fill `#6835ff` does not; its secondary fill does).
+  Every fill has a white `-on-solid`. Every `--gradient-{f}` is a flat fill.
+- **Secondary** is navy on think (`#0e2a4d`, lifted to `#2b4366` as a dark fill so it does not vanish
+  on near-black) and aubergine on elemetrik (`#1f1442`, lifted to `#3a2c6e`) — no longer slate `#64748b`.
+- **Accent** is the logo lime `#b3d335` flat on think (solid and mark the same in both schemes) and a
+  pink fill `#d42a68` on elemetrik.
+- **Light scheme** is one white plane (`--background` `--surface` `--card` all `#ffffff`), tighter radii
+  (`--radius` 8px, `--radius-chip` 6px, `--radius-card` 12px), hairline shadows, and **no coloured
+  glows or button shadows (`none`)**.
+- **Known, shipped duty misses** — `resolveBrand` returns 4 warnings on think and 3 on elemetrik, all
+  light-scheme **mark** (3:1) duties: `--success`, `--warning`, `--accent-green`, plus `--accent` on
+  think. White labels on the lime, amber and green fills are below 4.5:1 by design (1.71 / 2.15 /
+  2.78). `acknowledged` is empty in both presets.
+
+**Custom brands inherit the shared layer too** — `makePreset` merges it under your `overrides`. A custom
+`info` seed is ignored (still `#3aa0ff` / `#008aff`), as are the fills of `accent-green`, `accent-pink`,
+`success`, `warning` and `danger` and the whole light neutral/shape set. Details and the escape hatch
+are in [references/wiring.md](references/wiring.md#custom-brands). The engine's own invariant tests run
+on the *untuned* presets, so "the engine guarantees X" and "the sheet ships X" are different statements
+at 1.5.x — verify against the sheet.
 
 **Ramp mechanic worth knowing:** `ROLE_SLOTS = { text: 1, main: 2 }` with
 `ROLE_LIGHT_SHIFT = { text: 3, main: 1 }` — **the two slots cross over between schemes**, because on
@@ -167,25 +236,28 @@ Full 205-name inventory, grouped, with both presets' resolved values, is in
 | Neutral veils | `--fg-muted` `--fg-muted-min` `--fg-disabled` `--border` `--glass-border` `--glass-bg` `--glass-bg-card` `--glass-dark-bg` `--hover-overlay` |
 | Inputs | `--input` (its **light** value is the keyword `transparent`) `--input-border{,-hover}` `--input-disabled-bg` `--input-disabled-border` |
 | Buttons (bare) | `--btn-outline-border{,-hover}` `--btn-ghost-bg{,-hover}` |
-| Focus | `--ring` — alpha of the primary **seed** (not the floored fill). Same hue in both schemes; the **alpha** differs, 0.40 dark / 0.30 light |
+| Focus | `--ring` — the primary **mark** of each scheme at alpha 0.4 (think `rgb(58 160 255 / 0.4)` dark, `rgb(0 138 255 / 0.4)` light; elemetrik `#8a63ff` / `#6835ff` hues). Through 1.4.1 it was the seed at 0.40 dark / 0.30 light |
 | Chrome | `--topbar-bg` |
-| Depth (neutral) | `--shadow-card` `--shadow-card-hover` `--shadow-elevated` `--shadow-dropdown` — **not** scaled by `intensity`; they are depth cues, not brand |
-| Radii | `--radius` (12px default) `--radius-chip` `--radius-card` `--radius-pill` |
-| Type / motion | `--font-heading` and `--font-body` — **both `'Plus Jakarta Sans', system-ui, sans-serif`** in the shipped presets; `--font-mono` (`'Geist Mono', ui-monospace, monospace`); `--ease-entrance` |
+| Depth (neutral) | `--shadow-card` `--shadow-card-hover` `--shadow-elevated` `--shadow-dropdown` — **not** scaled by `intensity`; they are depth cues, not brand. Hairline + faint drop in light (1.5.0) |
+| Radii | `--radius` `--radius-chip` `--radius-card` `--radius-pill` — **scheme-dependent**: 12 / 16 / 20px in dark, **8 / 6 / 12px in light** (pill is `9999px` in both). `PresetConfig.radius` moves the dark values only |
+| Type / motion | `--font-heading` and `--font-body` — **both `'Poppins', system-ui, sans-serif`** in the shipped presets (1.5.1; Plus Jakarta Sans through 1.5.0); `--font-mono` (`'Geist Mono', ui-monospace, monospace`); `--ease-entrance` |
 | Non-family channels | `--background-channel` `--surface-channel` `--card-channel` `--fg1-channel` `--fg2-channel`, plus the two fixed overlays `--white-channel: 255 255 255` and `--black-channel: 0 0 0`. There is **no** `--white` / `--black` base token |
 
-**Outfit is gone.** No shipped preset references it any more — `--font-heading` and `--font-body` both
-resolve to Plus Jakarta Sans, and `createStarterkitTheme()`'s typography hardcodes the same string for
-`fontFamily`, `h1`–`h6`, `caption`, `button` and `overline`. The only surviving mention is
-`buildFontsSheet()`, which still fetches Outfit for consumers who set their own heading face to it.
-If an app is loading Outfit via `next/font` and expecting headings to use it, they are not; wire
+**The default face is Poppins (1.5.1).** `--font-heading` and `--font-body` both resolve to Poppins, and
+`createStarterkitTheme()`'s typography hardcodes the same string for `fontFamily`, `h1`–`h6`, `caption`,
+`button` and `overline`. **Nothing in the package loads the font file** — the sheets only name the face,
+so load Poppins yourself (or the opt-in CDN `fonts.css`). Outfit and Plus Jakarta Sans are referenced by
+no shipped preset; they survive only in `buildFontsSheet()`'s whitelist. If an app is still loading
+Plus Jakarta Sans or Outfit via `next/font` and expecting headings to use it, they are not; wire
 `--font-heading` yourself.
 
 **Composite gradients — always pair a gradient with its `-ink`:** `--gradient-avatar{,-from,-ink}`,
 `--gradient-avatar-2{,-ink}`, `--gradient-avatar-3{,-from,-ink}`, `--gradient-progress`, and the only
 two cross-family blends, `--gradient-primary-info{,-ink}` and `--gradient-primary-accent-pink{,-ink}`.
-(`--gradient-avatar-2` is byte-identical in value to `--gradient-primary`; two names, two jobs, on
-purpose.)
+(In 1.5.1 `--gradient-avatar` is byte-identical in value to `--gradient-primary` — both flat primary;
+`--gradient-avatar-2` is the 135° `--primary-solid` → `--primary-solid-hover` sweep. Two names, two jobs, on
+purpose. On think `--gradient-primary-info` renders one colour, because primary and info are the same
+blue.)
 
 **Status palette** — categorical, fixed hexes, brand-independent, each with a `-channel`, and **absent
 from the light block entirely**: `--status-draft` `--status-generating` `--status-review`
@@ -206,10 +278,14 @@ selects the element the custom properties are declared on.
 
 Theme-package specifics:
 
-- A preset sheet is exactly two blocks: `:root { …all 205 tokens… }` then
-  `[data-mui-color-scheme="light"] { …only the 100 that differ; color-scheme: light }`. **Only
-  differences go in the light block** — a light rule restating a token at equal specificity would beat
-  a later `:root` brand override, so a tenant colour would apply in dark and silently not in light.
+- A preset sheet is exactly two blocks: `:root { …all 205 tokens, plus --tokens-version and
+  --tokens-brand… }` then `[data-mui-color-scheme="light"] { …the 100 names in LIGHT_TOKEN_NAMES;
+  color-scheme: light }`. **By default only differences go in the light block** — a light rule
+  restating a token at equal specificity would beat a later `:root` brand override, so a tenant colour
+  would apply in dark and silently not in light. **The shipped sheets are the deliberate exception (1.5.1):**
+  both declare the same 100 names (`serializeBrandCss`'s `alwaysLight`), so a few entries equal their dark
+  value (think's `--accent` and `--accent-channel`; elemetrik's `--primary-solid` and
+  `--primary-solid-hover`). The set of names is fixed; the values per scheme are not all different.
 - `serializeBrandCss` emits `['[data-mui-color-scheme="light"]']` by default. `[data-theme="light"]`
   is **not** emitted unless you ask:
   ```js
@@ -245,24 +321,32 @@ the Bootstrap bridge — is in [references/wiring.md](references/wiring.md).
 
 ## The two presets
 
-Both emitted sheets have a **byte-identical custom-property name list in the same order**. They differ
-only in values, and only where two seeds propagate:
+Both emitted sheets have a **byte-identical custom-property name list in the same order** (207
+declarations each). They differ in 32 `:root` values (plus `--tokens-brand`) and 20 light-block values:
+the `primary`, `secondary` and `accent` families, `--ring`, `--shadow-card-hover`, those families' glows
+and button shadows, and the avatar stops/inks. The seeds below are what the engine is given; the
+*shipped* values are the hand-tuned ones (see [the hand-tuned palette](#the-hand-tuned-palette)):
 
 | role | think | elemetrik |
 |---|---|---|
-| `primary` seed | `#37a3fe` → renders `--primary-solid: #007acd` (floored) | `#6832ff` → renders `--primary-solid: #6832ff` |
-| `accent` | `#b3d335` (= `accent-green`) | `#ee4480` (= `accent-pink`) |
+| `primary` seed | `#008AFF` | `#6832FF` |
+| `primary` shipped fill / mark | fill `#3aa0ff` dark, `#008aff` light; mark the same | fill `#6835ff` both schemes; mark `#8a63ff` dark, `#6835ff` light |
+| `secondary` shipped (seed `#64748B` in both) | navy — mark `#7b8fa8` / `#0e2a4d`, fill `#2b4366` / `#0e2a4d` | aubergine — mark `#8a7fb0` / `#1f1442`, fill `#3a2c6e` / `#1f1442` |
+| `accent` seed | `#B3D335` (= `accent-green`) | `#EE4480` (= `accent-pink`) |
+| `accent` shipped fill | `#b3d335` | `#d42a68` (= `accent-pink-solid`) |
 
-Everything else — `secondary` `#64748b`, `success` `#4caf50`, `warning` `#f59e0b`, `danger` `#f43f5e`,
-`info` `#0058d4`, the fixed categorical roles, ramp shape, neutrals, duties, `radius: 12`,
-`intensity: 1`, fonts — is identical. `accent` is the *active brand's* accent and coincides with a
-fixed categorical role in both shipped presets; that overlap is intended, do not deduplicate it.
+(Mark values are dark / light.) Everything else — `success` `#4caf50`, `warning` `#f59e0b`, `danger`
+`#f43f5e`, `info` (seed `#37A3FE`, **shipped `#3aa0ff` dark / `#008aff` light** — think's blue, in both
+presets), the fixed categorical roles, ramp shape, neutrals, duties, `intensity: 1`, `radius: 12` (dark),
+fonts — is identical. `accent` is the *active brand's* accent and coincides with a fixed categorical
+role in both shipped presets; that overlap is intended, do not deduplicate it.
 
-`PresetConfig` may vary only `{ id, name, seeds, intensity = 1, radius = 12, fonts }`, and
+`PresetConfig` may vary only `{ id, name, seeds, intensity = 1, radius = 12, fonts, overrides }`, and
 `seeds` is `Record<RoleName, string>` — **all nine roles, required**. Anything else is a change to
-`src/presets/base.ts` and applies to **both** brands. `acknowledged` is empty in both shipped presets
-and is meant to stay empty: if a seed cannot meet a duty, change the seed, or add a reviewed
-acknowledgement carrying the measured number. **Never lower a `min`.**
+`src/presets/base.ts` or the shared `src/presets/tuning.ts` and applies to **both** brands (and to every
+`makePreset` brand). `acknowledged` is empty in both shipped presets and is meant to stay empty: if a
+seed cannot meet a duty, change the seed, or add a reviewed acknowledgement carrying the measured
+number. **Never lower a `min`.**
 
 ## Legacy names are banned — use the current ones, and fix what you find
 
@@ -330,7 +414,7 @@ Then three steps that a find-and-replace cannot do:
 | `--accent` | the brand hue, an **alias of `--mint`** | the **third** brand hue — a different family |
 | `--accent-text` | mint's text rung | the third family's text rung |
 | `--accent-border` | mint's decorative border | the third family's decorative border |
-| `--gradient-primary` | `--brand-fill → --brand-fill-end` — mint blended into cyan, two *independent* seeds | `--primary-solid → --primary-solid-hover`, one family |
+| `--gradient-primary` | `--brand-fill → --brand-fill-end` — mint blended into cyan, two *independent* seeds | one family — engine rule `--primary-solid → --primary-solid-hover`; a flat `--primary-solid` on the 1.5.x presets |
 
 `isTokenName()` returns `true` for all four, in both ABIs. Nothing catches them, no test fails, and the
 screen paints the wrong family looking entirely intentional. **In a file being migrated off the legacy
@@ -377,12 +461,15 @@ onto the other. Do not assume a brand document can be fed straight to `makePrese
 | Don't | Why | Do |
 |---|---|---|
 | Any hex literal in a component | Pins one brand; invisible to a token audit | a token |
-| `--{f}-border` on an outline button | Measures 1.7–3.0:1; one shipped at 1.56:1 | `--{f}` |
+| `--{f}-border` on an outline button | Measures about 1.3–2.7:1 on the 1.5.1 presets; one shipped at 1.56:1 | `--{f}` |
 | `--{f}-solid` as text on a surface | It is a fill, solved for its own label, not for your surface | `--{f}-text` |
 | `--{f}` as body text | Solved for 3:1, not 4.5:1 | `--{f}-text` |
-| `color: #fff` over a brand fill | The measured ink is near-black on a light-seeded brand | `--{f}-on-solid` |
-| `color: #0b0f19` over `--primary-solid` | The ink is measured, and on **both** shipped presets it is `#ffffff` | `--{f}-on-solid` |
-| Assuming `--{f}-solid` equals the seed | `primary` is floored to clear 4.5:1 against white | read the token |
+| `color: #fff` over a brand fill | The shipped presets happen to use white everywhere, but a custom brand's `accent`/`secondary` can measure to near-black ink — and the white is a tuning decision that can change | `--{f}-on-solid` |
+| `color: #0b0f19` over `--primary-solid` | `primary`'s label is pinned white on every brand | `--{f}-on-solid` |
+| Assuming `--{f}-solid` equals the seed, or equals itself across schemes | Fills are hand-tuned on the shipped presets (think `info` and `primary` flip `#3aa0ff` → `#008aff`; every `secondary` flips) and `primary` can still be floored for a pale tenant seed | read the token |
+| Parsing `--glow-*` / `--shadow-btn-*` as a colour, or relying on them in light | They are the keyword `none` in the light scheme | treat as a `box-shadow` value that may be `none` |
+| Expecting `makePreset({ radius })`, an `info` seed or light surfaces to take effect in a custom brand | The shared tuning layer pins light radii (8/6/12), `info`, and several fills; only the dark radii follow `radius` | pass `overrides`, see [wiring](references/wiring.md#custom-brands) |
+| Treating a matching `TOKENS_VERSION` as "nothing changed" | It hashes names only; 1.4.1 → 1.5.1 kept it while values and light-block membership moved | diff the sheets and the light-name fingerprint |
 | A gradient without its `-ink` | The ink is what makes the gradient legible | pair them |
 | `--fg1` on `--{f}-solid` | `-bg` is the tint that takes `--fg1`; `-solid` takes `-on-solid` | match the pair |
 | Lowering a duty `min` so a seed passes | The duty is the contract | change the seed, or acknowledge with the measured number |
@@ -399,11 +486,11 @@ onto the other. Do not assume a brand document can be fed straight to `makePrese
 
 ## Red flags — stop
 
-- About to run `pnpm add …@latest`, `@^1`, `@~1.4` or a bare `pnpm add <pkg>` → all of them record a
+- About to run `pnpm add …@latest`, `@^1`, `@~1.5` or a bare `pnpm add <pkg>` → all of them record a
   **range**. Look up the latest version, then install that literal number.
-- `package.json` shows `"^1.4.1"` rather than `"1.4.1"` → re-add with `--save-exact`.
+- `package.json` shows `"^1.5.1"` rather than `"1.5.1"` → re-add with `--save-exact`.
 - About to install the version this file names without re-checking the registry → check first; the
-  latest may have moved past 1.4.1.
+  latest may have moved past 1.5.1.
 - About to write a hex literal anywhere in app CSS, `sx` or an inline style → pick a token by job.
 - About to use `--{f}-border` for a border that means something → use `--{f}`.
 - About to hardcode a label colour over a brand fill → `--{f}-on-solid`.
@@ -424,7 +511,7 @@ onto the other. Do not assume a brand document can be fed straight to `makePrese
 
 ## Staleness — how to re-derive
 
-This file documents 1.4.1. Nothing enforces that; check it. Compare three numbers — what the registry
+This file documents 1.5.1. Nothing enforces that; check it. Compare three numbers — what the registry
 publishes, what `package.json` pins, and what is actually installed:
 
 ```bash
@@ -437,15 +524,25 @@ node -p "require('@devopsnext/starterkit-theme/package.json').version"
 
 They should all match, and the `package.json` entry should be a bare number with no `^` or `~`.
 
-**Then check the contract, not just the version** — two of the last three releases moved the version
-and nothing else:
+**Then check the contract, not just the version** — releases have moved the version and nothing in
+the name set, and 1.4.1 → 1.5.1 moved almost every *value* while the name set stayed put:
 
 ```bash
 node -p "const t=require('@devopsnext/starterkit-theme'); [t.TOKENS_VERSION, t.ROOT_TOKEN_NAMES.length, t.LIGHT_TOKEN_NAMES.length].join(' ')"
 ```
 
-Expected: `9451b3ea404a 205 100`. If all three hold, every table above still stands regardless of the
-version number — that hash is taken over the token **name** set.
+Expected: `9451b3ea404a 205 100` (verified against the published 1.5.1 tarball; identical to 1.4.1).
+If any of them differs, the **name set** moved. If all three hold, **the names still stand — the values
+may not.** That hash is taken over the token **name** set only, and the 1.4.1 → 1.5.1 window proved it:
+same three numbers, different light-block membership (9 names in, 9 out) and a re-tuned palette. So also
+fingerprint the light-block names (expected `9529c7a66ab1` at 1.5.1):
+
+```bash
+node -p "const t=require('@devopsnext/starterkit-theme'); require('crypto').createHash('sha256').update(t.LIGHT_TOKEN_NAMES.join('\n')).digest('hex').slice(0,12)"
+```
+
+and, because no hash covers values, **diff `presets/think.css` and `presets/elemetrik.css` against the
+tables in [references/tokens.md](references/tokens.md)** whenever the version number moved.
 
 If any of them moved, re-derive **before** trusting a table, in this order:
 
@@ -453,18 +550,23 @@ If any of them moved, re-derive **before** trusting a table, in this order:
 2. `node_modules/@devopsnext/starterkit-theme/presets/think.css` and `elemetrik.css` — the emitted
    result, and the light block's selector. This is where a changed *value* shows up; the hash will not
    move for one.
-3. `dist/index.d.ts`, `dist/presets.d.ts`, `dist/mui.d.ts`, `dist/react/index.d.ts` — the API surface.
+3. `dist/index.d.ts`, `dist/presets.d.ts`, `dist/mui.d.ts`, `dist/react/index.d.ts`, `dist/spec-*.d.ts` —
+   the API surface (`PresetSpec` lives in the spec file). There is no recorded type-surface fingerprint;
+   diff these by eye or with `diff` against the previous install.
 4. `node_modules/@devopsnext/starterkit-theme/README.md`, with the `styles.css` caveat above in mind.
 5. Upstream source, if checked out — `src/presets/base.ts` for the token rules and duties,
-   `src/engine/ladder.ts` for `ROLE_SLOTS` / `SOLID_WHITE_FLOOR` / `HOVER_MIX`, `src/engine/spec.ts`
-   for the ramp model. <https://github.com/thinktalentservice-ai/starterkit-theme>
+   `src/presets/tuning.ts` (shared hand-tuned values) and `think.ts` / `elemetrik.ts` (per-brand
+   tuning) for what actually ships, `src/engine/ladder.ts` for `ROLE_SLOTS` / `SOLID_WHITE_FLOOR` /
+   `HOVER_MIX`, `src/engine/spec.ts` for the ramp model. Their header comments describe the *engine*
+   derivation and are partly stale where the tuning overrides it. <https://github.com/thinktalentservice-ai/starterkit-theme>
 6. What the running app actually resolved, which is the only check that catches a broken import order:
    ```js
    const r = getComputedStyle(document.documentElement);
    [r.getPropertyValue("--tokens-brand"), r.getPropertyValue("--tokens-version")];
    ```
-   Those two are emitted **only** when `serializeBrandCss` is called with `provenance`; a preset sheet
-   alone does not carry them.
+   `serializeBrandCss` emits those two **only** when called with `provenance`; the shipped `presets/*.css`
+   sheets already carry both as literals (`--tokens-version: "9451b3ea404a"`, `--tokens-brand: "think"`
+   or `"elemetrik"`), so a preset-sheet app reads them without any extra step.
 7. If token names changed, re-check `bootstrap-bridge.css` and any app stylesheet for names that no
    longer exist — that is where the silent `var()` failure lands. This bridge was silently broken once
    already, still naming deleted hue families, and Bootstrap fell back to stock literals with no error

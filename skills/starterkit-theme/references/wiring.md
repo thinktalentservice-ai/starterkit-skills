@@ -1,7 +1,7 @@
 # Wiring `@devopsnext/starterkit-theme`
 
 Companion to [SKILL.md](../SKILL.md). Read that first for the token decision table; this file covers
-getting the tokens onto the page and into MUI. Derived from the published 1.4.1 tarball
+getting the tokens onto the page and into MUI. Derived from the published 1.5.1 tarball
 (`dist/*.d.ts`, `dist/mui.js`, `presets/*.css`) and from the reference host,
 `template-starterkit-nextjs`.
 
@@ -73,8 +73,14 @@ Render it as exactly one `<style>` in `<head>`:
   the string.
 - **Exactly one element with that id.** A second one carrying the same tokens leaves which-one-wins to
   document order, and the live editor searches for that id to *replace* rather than append.
-- `provenance` is what emits `--tokens-version` and `--tokens-brand`. A preset sheet alone does not
-  carry them, so `getComputedStyle` will report empty strings for both unless you pass it.
+- `provenance` is what makes `serializeBrandCss` emit `--tokens-version` and `--tokens-brand`. The
+  shipped `presets/*.css` sheets already declare both as literals (verified at 1.4.1 and 1.5.1 — the
+  sheet has 207 declarations: 205 tokens plus these two), but CSS you build yourself from
+  `resolveBrand()` does not, so `getComputedStyle` reports empty strings for both unless you pass it.
+- `serializeBrandCss` also takes `alwaysLight` (1.5.0+) — token names to declare in the light block
+  even when the value equals `:root`. By default a light value equal to dark is omitted. Pass it only
+  if you are publishing a catalogue of sheets that must all flip the same token set; a single SSR
+  brand does not need it.
 
 If you inject the brand from an inline `<head>` script (pre-paint, to avoid a flash of the fallback
 tokens), keep it a **classic** script. `type="module"`, `defer` and `async` all defer it, which
@@ -112,6 +118,16 @@ theme-creation time** — which is build time. So every intention supplies all o
 
 **`error` maps to the `danger` family.** There is no `--error-*` token.
 
+**Fills read the `-solid` rung, not `.main` (1.4.4).** `.main` is the *mark*, built for text, icons and
+outlines; MUI would otherwise paint contained buttons with it behind a `contrastText` label that is
+the on-**solid** ink — fill and ink from different rungs, which measured about 2.6:1 on think's then-seed `#37a3fe` (per the source comment). The
+theme therefore overrides `MuiButton` (contained), `MuiFab`, filled `MuiChip` and `MuiBadge` to
+`background: var(--{f}-solid)` / `color: var(--{f}-on-solid)` / hover `var(--{f}-solid-hover)`. Contained
+`primary` and `secondary` buttons additionally get `var(--gradient-{f})` and `var(--shadow-btn-{f})`
+(both resolve to a flat fill and, in light, `none` on the 1.5.x presets). Disabled and `loading` buttons
+keep only the chip radius. If you write your own `sx` for a filled control, do the same — never put a
+`contrastText` label on `palette.*.main`.
+
 `dividerChannel` being explicitly `undefined` rather than absent is load-bearing: absent means "derive
 it", `undefined` means "there isn't one". `--border` is already an `rgba()`, so there is no meaningful
 triple to publish.
@@ -125,15 +141,17 @@ carries no special meaning to MUI beyond what the palette entry provides.
 
 ### Typography is not var()-driven
 
-`dist/mui.js` hardcodes the literal string `"'Plus Jakarta Sans', system-ui, sans-serif"` across
-`fontFamily`, `h1`–`h6`, `caption`, `button` and `overline`, and `CreateStarterkitThemeOptions`
-exposes no font hook. The palette follows the brand automatically; the fonts do not — a
-`makePreset({ fonts })` brand moves `--font-heading` / `--font-body` and MUI keeps the literal.
+`dist/mui.js` hardcodes the literal string `"'Poppins', system-ui, sans-serif"` (Plus Jakarta Sans
+through 1.5.0) across `fontFamily`, `h1`–`h6`, `caption`, `button` and `overline`, and
+`CreateStarterkitThemeOptions` exposes no font hook. The palette follows the brand automatically; the
+fonts do not — a `makePreset({ fonts })` brand moves `--font-heading` / `--font-body` and MUI keeps the
+literal.
 
-**Outfit is no longer used.** Both shipped presets set `--font-heading` and `--font-body` to Plus
-Jakarta Sans, and the MUI typography agrees. The only surviving mention in the package is
-`buildFontsSheet()`, which still fetches Outfit for consumers who choose it themselves. An app loading
-Outfit via `next/font` and expecting headings to pick it up will not get it.
+**Poppins is the default heading and body face (1.5.1).** Both shipped presets set `--font-heading` and
+`--font-body` to Poppins, and the MUI typography agrees. Nothing in the package loads the font file —
+load Poppins yourself. Outfit and Plus Jakarta Sans survive only in `buildFontsSheet()`'s whitelist
+(Poppins is in it too), for consumers who choose one of them themselves. An app still loading Plus
+Jakarta Sans or Outfit via `next/font` and expecting headings to pick it up will not get it.
 
 With `next/font` this matters in a specific way. On Next 16, `next/font` registers faces under the
 **real** family name, so the package's literals do resolve — nothing is broken. What they miss is the
@@ -235,14 +253,34 @@ the staleness routine in SKILL.md.
   name: string;
   seeds: Record<RoleName, string>;   // ALL NINE roles, required, 6-digit hex
   intensity?: number;                // 0..1, default 1 — scales COLOURED glow/shadow alphas only
-  radius?: number;                   // default 12; chip/card/pill radii step off it
+  radius?: number;                   // default 12; chip/card/pill radii step off it — DARK scheme only (see below)
   fonts?: { heading: string; body: string; mono: string };
+  overrides?: Tuning;                // 1.5.0+: per-scheme hand-tuned values, { dark?: Record<token, string>, light?: … }
 }
 ```
 
 Nothing else is configurable. Ramp shape, duties, neutrals and the light-shift table live in
 `src/presets/base.ts` and apply to **every** brand — changing one there changes both shipped presets
 too.
+
+**Every `makePreset` brand inherits the shared tuning layer (1.5.0+).** `makePreset` merges
+`SHARED_TUNING` under your `overrides`, so a custom brand does **not** get a purely engine-derived
+palette. Verified against the 1.5.1 tarball with a custom brand whose `info` seed was `#7C3AED`:
+`--info` still resolved to `#3aa0ff` dark / `#008aff` light. What the shared layer pins, regardless of
+your seeds:
+
+- **`info`** — the Think Talent blue (`#3aa0ff` / `#008aff`); your `info` seed is ignored.
+- **The fills and labels of `accent-green`, `accent-pink`, `success`, `warning`, `danger`** — fixed
+  hexes, `-on-solid` `#ffffff`, flat `--gradient-{f}`. (`primary`, `secondary` and `accent` fills come
+  from your seeds; their `-on-solid` is still measured, apart from `primary`'s which is pinned white.)
+- **The light scheme's surfaces, text, borders and shape** — one white plane, `--fg1` `#0e1525`, and
+  light radii of 8 / 6 / 12 px regardless of `radius`; coloured glows and button shadows are `none`.
+
+To change any of these for a brand, pass it in `overrides` (keys must be tokens the preset already
+emits — an unknown name throws — and slot overrides must be `#rrggbb`). `resolveBrand` still measures
+every duty against the final values and reports misses in `warnings`; a tuned value is not exempt.
+The shipped presets resolve with 4 (think) and 3 (elemetrik) warnings, all light-scheme **mark**
+duties (3:1): `--success`, `--warning`, `--accent-green`, plus `--accent` on think.
 
 A tenant **brand document** (`schema.json`) is a different, narrower shape: `{ id, preset, seeds?:
 { primary, secondary, intensity, radius }, overrides? }`. It has **four** seed fields, not nine, and

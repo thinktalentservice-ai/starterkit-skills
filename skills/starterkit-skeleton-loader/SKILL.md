@@ -25,7 +25,7 @@ mode come from the host's MUI theme.
 
 | | |
 |---|---|
-| Package version | **0.2.0** — npm `latest` on 2026-10-08, published 2026-10-07T19:35:52Z |
+| Package version | **0.2.1** — npm `latest` on 2026-11-20, published 2026-11-20T06:13:10Z |
 | Type-surface fingerprint | `7375a89cbe31` — sha256 of `dist/index.d.ts`, first 12 hex ([command](#staleness--how-to-re-derive)) |
 | Source | <https://github.com/thinktalentservice-ai/starterkit-skeleton-loader> |
 | npm | <https://www.npmjs.com/package/@devopsnext/starterkit-skeleton-loader> |
@@ -34,7 +34,7 @@ mode come from the host's MUI theme.
 tables are derived from `dist/index.d.ts`, `src/AutoSkeleton.tsx`, `src/extract.ts` and
 `bin/auto-skeleton.mjs` — authoritative. *Choosing* and *Anti-patterns* are judgement. There is no
 Storybook; the package's own README is the long-form reference. If the installed version has moved
-past 0.2.0, see [Staleness](#staleness--how-to-re-derive) before trusting a table.
+past 0.2.1, see [Staleness](#staleness--how-to-re-derive) before trusting a table.
 
 ## Install — always the latest version, always pinned exactly
 
@@ -49,9 +49,9 @@ npm view @devopsnext/starterkit-skeleton-loader version
 pnpm add @devopsnext/starterkit-skeleton-loader@<version-from-step-1>
 ```
 
-At the time this file was written step 1 answered `0.2.0`. `package.json` must end up holding the
-bare number — `"@devopsnext/starterkit-skeleton-loader": "0.2.0"`. **Open it and check.** If your
-client widened it to `"^0.2.0"`, re-add with `--save-exact` (npm/pnpm) or `--exact` (yarn).
+At the time this file was written step 1 answered `0.2.1`. `package.json` must end up holding the
+bare number — `"@devopsnext/starterkit-skeleton-loader": "0.2.1"`. **Open it and check.** If your
+client widened it to `"^0.2.1"`, re-add with `--save-exact` (npm/pnpm) or `--exact` (yarn).
 
 **Why not `@latest`.** It installs the same code but records a **caret** range, and on a `0.x`
 package a caret still admits patch releases nobody reviewed. This package decides what every
@@ -389,7 +389,7 @@ bone); scaled ancestors are handled, rotated or skewed ones are not — bones ar
 
 ## Staleness — how to re-derive
 
-This file documents 0.2.0. Nothing enforces that; check it. Compare what the registry publishes,
+This file documents 0.2.1. Nothing enforces that; check it. Compare what the registry publishes,
 what `package.json` pins, and what is installed:
 
 ```bash
