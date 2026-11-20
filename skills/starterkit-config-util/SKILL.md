@@ -81,19 +81,19 @@ Trap 2 below.)
 pnpm add @devopsnext/starterkit-config-util@<version-from-step-1>
 ```
 
-At the time this file was written step 1 answered `0.4.0`, so step 2 was
-`pnpm add @devopsnext/starterkit-config-util@0.4.0`.
+At the time this file was written step 1 answered `0.4.1`, so step 2 was
+`pnpm add @devopsnext/starterkit-config-util@0.4.1`.
 
 `package.json` must end up holding the bare number —
-`"@devopsnext/starterkit-config-util": "0.4.0"`. **Open it and check.**
+`"@devopsnext/starterkit-config-util": "0.4.1"`. **Open it and check.**
 
 **Trap 1 — a one-step install records a range.** Measured against pnpm 11.11.0 on
 a clean project:
 
 | Command | Writes |
 |---|---|
-| `pnpm add …-config-util@0.4.0` | `"0.4.0"` ✅ exact |
-| `pnpm add …-config-util@latest` | `"^0.4.0"` ❌ caret |
+| `pnpm add …-config-util@0.4.1` | `"0.4.1"` ✅ exact |
+| `pnpm add …-config-util@latest` | `"^0.4.1"` ❌ caret |
 
 Same for `@^0`, `@~0.1`, `@*` and a bare `pnpm add <pkg>` — all of them record a
 range. A caret fails any `pinned === installed` gate, and it lets a minor bump
@@ -119,7 +119,7 @@ makes pnpm **create or edit `pnpm-workspace.yaml`** and append:
 
 ```yaml
 minimumReleaseAgeExclude:
-  - '@devopsnext/starterkit-config-util@0.4.0'      # <- no marker, no reason
+  - '@devopsnext/starterkit-config-util@0.4.1'      # <- no marker, no reason
 ```
 
 It installs anyway and the line scrolls past. If your repo runs a release-age gate,
@@ -136,7 +136,7 @@ To keep it (window still open):
 ```yaml
   # Bridge, not a setting. Delete once the window has passed; by then the package
   # installs on its own age, so removing it cannot break resolution.
-  - '@devopsnext/starterkit-config-util@0.4.0' # published 2026-10-07T08:59:34Z
+  - '@devopsnext/starterkit-config-util@0.4.1' # published 2026-11-19T09:21:15Z
 ```
 
 Get the real timestamp with `npm view <pkg> time --json`. **Not**
@@ -579,9 +579,9 @@ CSP nothing checks. Add the gate in the same commit — see the walkthrough's st
 - About to run `pnpm add …@latest`, `@^0`, `@~0.1` or a bare `pnpm add <pkg>` →
   all of them record a **range**. Look the latest version up, then install that
   literal number.
-- `package.json` shows `"^0.4.0"` rather than `"0.4.0"` → re-add with `--save-exact`.
+- `package.json` shows `"^0.4.1"` rather than `"0.4.1"` → re-add with `--save-exact`.
 - About to install the version this file names without re-checking the registry →
-  check first; latest may have moved past 0.4.0.
+  check first; latest may have moved past 0.4.1.
 - About to write a host-side `NEXT_PUBLIC_` stripper for `env.json` → **don't**; `decodeEnvJson` does it since 0.2.0, and an app-side copy has to be wired into *both* decode sites or the baked and deployed values silently disagree.
 - About to "fix" `env.json` by re-keying it → that file is usually **DevOps-owned**. Check who writes it before editing; the decoder is the side that adapts.
 - About to call `loadIntegrations` without a `.catch()` → it **rejects**; that is an unhandled rejection.

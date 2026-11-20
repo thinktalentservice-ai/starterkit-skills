@@ -53,7 +53,7 @@ strings like "obsidian · dark"; that is account metadata, not a preset id you c
 | `--accent` | the brand hue = `--mint` | the **third** brand hue — a different family |
 | `--accent-text` | mint's text rung | the third family's text rung |
 | `--accent-border` | mint's decorative border | the third family's decorative border |
-| `--gradient-primary` | `--brand-fill → --brand-fill-end`, i.e. mint blended into cyan — two *independent* client seeds | `--primary-solid → --primary-solid-hover`, one family |
+| `--gradient-primary` | `--brand-fill → --brand-fill-end`, i.e. mint blended into cyan — two *independent* client seeds | one family — engine rule `--primary-solid → --primary-solid-hover`; a flat `--primary-solid` on the 1.5.x presets |
 
 `isTokenName()` returns `true` for every one of these, in both ABIs. Nothing catches them. A file that
 used old `--accent` and was left alone is now painting the wrong family, and it looks intentional.
@@ -88,7 +88,7 @@ The job is identical; only the family word moved.
 
 **Note the ink collapse.** `--on-mint`, `--on-amber`, `--brand-fill-ink`, `--amber-fill-ink` and
 `--cobalt-fill-ink` all become `--{f}-on-solid`. The old sheet published one ink per fill; the new one
-publishes one measured ink per family, scored against the worse of the resting and hovered fill.
+publishes one ink per family. The engine measures it against the worse of the resting and hovered fill (and pins `primary` to white); the shipped 1.5.x presets hand-set it to `#ffffff` for every family. Either way, take it from `--{f}-on-solid`, never a literal.
 
 ## Tier B — family maps, you pick the suffix
 

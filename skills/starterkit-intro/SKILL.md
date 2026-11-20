@@ -23,7 +23,7 @@ thing a project needs after wiring is the static gate this skill ships (`lint:in
 
 | | |
 |---|---|
-| Package version | **0.1.0** |
+| Package version | **0.1.1** — npm `latest` on 2026-11-20, published 2026-11-20T07:13:59Z |
 | Type-surface fingerprint | `72d17c3a9550` — sha256 of `dist/index.d.ts`, first 12 hex ([re-derive](#staleness)) |
 | Source | <https://github.com/thinktalentservice-ai/starterkit-intro> |
 

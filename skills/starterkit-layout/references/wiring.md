@@ -1,7 +1,7 @@
 # Wiring the shell — the full recipe
 
 Loaded on demand from [../SKILL.md](../SKILL.md). Everything here is derived from
-`@devopsnext/starterkit-layout@1.4.1` and from the reference wiring in
+`@devopsnext/starterkit-layout@1.5.2` and from the reference wiring in
 `template-starterkit-nextjs` — the only app known to be on the current version.
 
 ## 1. The stylesheet, once, at the app root
@@ -185,7 +185,41 @@ Something that does not fit a 300px panel — a modal, an iframe, a full page �
 `headerDropdowns` entry. Give it a plain slot instead: `headerActionsSlot` puts it in the right-hand
 cluster after the theme toggle and before the avatar; `headerEndSlot` is past the avatar.
 
-## 6. The profile menu, and the way out
+## 6. The footer
+
+`footer` is a plain slot with **no default** — a shell package has no copyright line to print. Pass a
+`<Footer />` (1.5.0); it renders after `children`, outside the fluid `Container`, at the bottom of the
+content column:
+
+```jsx
+import { FullLayout, Footer } from "@devopsnext/starterkit-layout";
+
+footer={
+  <Footer
+    year={2026}                       // pin it on a statically exported page
+    siteName={t("footer.site")}       // translate in the host — Footer has no i18n
+    siteHref="https://example.com"    // opens in a new tab; omit it and the name is plain text
+    endSlot={<LanguagePicker />}      // side columns are slots; a picker belongs in endSlot
+  />
+}
+```
+
+Things that go quietly wrong:
+
+1. **`year`.** The default is the year at render time. On a statically exported build cut near
+   midnight on 31 December it differs from the HTML it hydrates against; pass the year you mean.
+2. **Translating.** `siteName` is a `ReactNode` — hand over the already-translated string. `t` on
+   `FullLayout` does not reach it.
+3. **A different centre.** `children` replaces the entire `© year | siteName` line, so `year` and
+   `siteName` stop mattering. Use it for legal links or a status badge, not alongside them.
+4. **Footer styling.** Do not restyle `.il-footer*` or `.il-content-area.il-has-footer` from app CSS —
+   they are package-owned (see [namespace.md](namespace.md)). The flex column that pins the footer to
+   the bottom only exists while `footer` is passed.
+
+A hand-assembled shell renders `<Footer />` itself at the bottom of its content column; nothing else
+in this recipe changes.
+
+## 7. The profile menu, and the way out
 
 ```jsx
 profile={{
@@ -225,7 +259,7 @@ Three things go wrong here and all three are quiet:
 blank rows. Pick a branch deliberately — guard the wrapper, or accept the blanks — and write down
 which.
 
-## 7. The login page — use `./brand`
+## 8. The login page — use `./brand`
 
 A login page renders outside the shell. Importing the main entry there drags reactstrap, simplebar
 and motion into that route's bundle for one logo.
@@ -245,7 +279,7 @@ holding exactly that is the seam, not ceremony.
 `Favicon` is **not** on this entry (it needs `motion`). `BrandMark`, `Logo`, `AuthLogo` and
 `DEFAULT_BRAND_NAME` are.
 
-## 8. RTL
+## 9. RTL
 
 `isRTL` sets `dir="rtl"` on the shell wrapper and flips **this package's own geometry only**.
 Flipping Bootstrap's utilities — `.me-auto`, `.btn-group`, form controls, the spacing sweep — is the
@@ -260,7 +294,7 @@ className={isRTL ? "rtl" : "ltr"}
 
 Without it the layout mirrors and every override you own silently stops applying.
 
-## 9. Geometry overrides
+## 10. Geometry overrides
 
 `geometry` maps 1:1 onto three custom properties written inline on the shell element. Numbers are
 px; omitted fields leave the stylesheet default standing.
@@ -273,7 +307,7 @@ For anything derived from those (`--il-rail-center`, `--il-label-x`, `--il-toggl
 re-declare on `.il-shell` — **never on `:root`**, which freezes the default and silently ignores this
 prop. See [namespace.md](namespace.md).
 
-## 10. Assembling the shell by hand
+## 11. Assembling the shell by hand
 
 `FullLayout` is the wiring between `Header` and `Sidebar`, not a wrapper that hides them. Render them
 directly when you need something `FullLayout` does not forward — `staggerDelay`, an unusual
@@ -298,7 +332,7 @@ useDrawerChrome({ open, onClose, pathname, isDesktop });
 **Do not call these hooks alongside `FullLayout`.** It already calls all three, and a second
 `useDrawerChrome` doubles the body-overflow save and restore.
 
-## 11. Local development against an unpublished build
+## 12. Local development against an unpublished build
 
 Never `link:`. Pack a tarball, which behaves exactly like a registry install and tests what actually
 ships:
@@ -308,7 +342,7 @@ pnpm build && pnpm pack
 ```
 
 ```bash
-pnpm add ./../starterkit-layout/devopsnext-starterkit-layout-1.4.1.tgz
+pnpm add ./../starterkit-layout/devopsnext-starterkit-layout-1.5.2.tgz
 ```
 
 A linked package resolves react from its own directory, and React identity is per module instance —

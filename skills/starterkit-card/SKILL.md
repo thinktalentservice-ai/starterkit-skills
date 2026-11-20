@@ -24,7 +24,7 @@ attributes and `styles.css` selects on them.
 
 | | |
 |---|---|
-| Package version | **2.3.0** — npm `latest` on 2026-08-29, published 2026-08-25T13:56:57Z |
+| Package version | **2.3.1** — npm `latest` on 2026-11-20, published 2026-11-19T06:01:34Z |
 | Type-surface fingerprint | `971d7fd9176c` — sha256 of `dist/index.d.ts`, first 12 hex ([command](#staleness--how-to-re-derive)) |
 | Source | <https://github.com/thinktalentservice-ai/starterkit-card-component> |
 | npm | <https://www.npmjs.com/package/@devopsnext/starterkit-card-component> |
@@ -32,7 +32,7 @@ attributes and `styles.css` selects on them.
 
 **How much to trust each section:** the axes, presets, props, token and DOM-contract tables are
 derived from `dist/index.d.ts`, `src/axes.ts`, `src/Card.tsx` and `styles.css` — authoritative.
-*Choosing* and *Anti-patterns* are judgement. If the installed version has moved past 2.3.0, see
+*Choosing* and *Anti-patterns* are judgement. If the installed version has moved past 2.3.1, see
 [Staleness](#staleness--how-to-re-derive) before trusting a table.
 
 ## Install — always the latest version, always pinned exactly
@@ -58,14 +58,14 @@ you need to see the history.)
 pnpm add @devopsnext/starterkit-card-component@<version-from-step-1>
 ```
 
-At the time this file was written step 1 answered `2.3.0`, so step 2 was:
+At the time this file was written step 1 answered `2.3.1`, so step 2 was:
 
 ```bash
-pnpm add @devopsnext/starterkit-card-component@2.3.0
+pnpm add @devopsnext/starterkit-card-component@2.3.1
 ```
 
 `package.json` must end up holding the bare number — `"@devopsnext/starterkit-card-component":
-"2.3.0"`. **Open it and check.** If your client widened it to `"^2.3.0"`, re-add with
+"2.3.1"`. **Open it and check.** If your client widened it to `"^2.3.1"`, re-add with
 `--save-exact` (npm/pnpm) or `--exact` (yarn).
 
 **Why not just `@latest`.** It installs the same code, but every client writes a **caret** range
@@ -419,7 +419,7 @@ development guard, not a runtime guarantee.
 
 ## Staleness — how to re-derive
 
-This file documents 2.3.0. Nothing enforces that; check it. Compare three numbers — what the registry
+This file documents 2.3.1. Nothing enforces that; check it. Compare three numbers — what the registry
 publishes, what `package.json` pins, and what is actually installed:
 
 ```bash
@@ -473,9 +473,9 @@ defaults come from this file.
 
 - About to run `pnpm add …@latest`, `@^2`, `@~2.3` or a bare `pnpm add <pkg>` → all of them record a
   **range**. Look up the latest version, then install that literal number.
-- `package.json` shows `"^2.3.0"` rather than `"2.3.0"` → re-add with `--save-exact`.
+- `package.json` shows `"^2.3.1"` rather than `"2.3.1"` → re-add with `--save-exact`.
 - About to install the version this file names without re-checking the registry → check first; the
-  latest may have moved past 2.3.0.
+  latest may have moved past 2.3.1.
 - A "gradient" card is rendering as a plain grey panel → `tone` is `neutral`; it degraded to `surface`.
 - About to write a literal `#fff` (or any hex) as a label colour on a gradient fill → rule 3.
 - About to add a CSS rule for `.ic-card` or `[data-fill="…"]` in app styles → override a token.

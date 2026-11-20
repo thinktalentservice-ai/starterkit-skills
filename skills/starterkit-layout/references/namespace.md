@@ -1,7 +1,7 @@
 # The `il-*` namespace, the two custom-property layers, and the cascade
 
 Loaded on demand from [../SKILL.md](../SKILL.md). Inventories are scraped from
-`@devopsnext/starterkit-layout@1.4.1`'s published `styles.css` (`5b4f865e944a`): **52 classes, 16
+`@devopsnext/starterkit-layout@1.5.2`'s published `styles.css` (`07f3751166da`): **59 classes, 18
 `--il-*` geometry properties, 29 `--il-t-*` token aliases.** Re-derive with the commands in the
 skill's Staleness section rather than trusting these counts after a bump.
 
@@ -93,7 +93,14 @@ Consequently: **do not give a page its own full-height background inside the col
 full-height paint is either invisible or a seam. Size with
 `calc(100dvh - var(--il-shell-top, 0px))` and paint only what must differ.
 
-## `--il-*` — the 16 geometry properties you may override
+**With a footer the column is a flex column.** `.il-content-area.il-has-footer` is `display: flex;
+flex-direction: column` and `.il-footer` gets `margin-top: auto`, which is what pins it to the bottom
+of a short page (the footer's own `margin-top` is 30px). It is opt-in by modifier, so a host with no
+`footer` keeps the plain block column and its child sizing. The footer itself paints
+`--il-t-surface` with a `--il-t-border` top rule in both schemes, unlike the column, which is painted
+in light only.
+
+## `--il-*` — the 18 geometry properties you may override
 
 One dash, not `--il-t-`. These are **not** design tokens; they are absent from the token sheet, and
 the one-dash difference is exactly what keeps the codegen's `--il-t-*` scraper off them.
@@ -103,6 +110,8 @@ the one-dash difference is exactly what keeps the codegen's `--il-t-*` scraper o
 | `--il-sidebar-width` | `240px` | open sidebar width |
 | `--il-mini-sidebar-width` | `80px` | collapsed rail width |
 | `--il-topbar-height` | `59px` | topbar height; read by `useHeaderAutoHide` |
+| `--il-row-height` | `40px` | sidebar nav row height — **fixed**, with zero vertical padding, so a row no longer depends on icon or label metrics. Collapsed, the label is `display: none` and an icon font with `line-height: 1` is shorter than a 13px label, which used to make collapsed rows 2–8px shorter than expanded ones (1.5.1) |
+| `--il-sub-row-height` | `36px` | the same, for a row inside a group (`.il-submenu .nav-link`) |
 | `--il-rail-center` | 40px | the icon rail line. The topbar mark, the sidebar avatar and every nav icon centre on it, so the mark sits directly above the icon column and the column does not move when the sidebar collapses |
 | `--il-label-x` | 68px | where every text column starts — nav labels, captions, the sidebar username. Rows reach it with different gaps; the text column is the constant, the gaps are the slack |
 | `--il-toggle-clearance` | `40px` | how far past the sidebar's trailing edge the collapse toggle sits, in both states. **Zero is not available**: an 80px mini column has 24px clear against a 36px `IconButton`, so pinning the toggle to the edge puts it on top of the mark |
@@ -115,7 +124,10 @@ the one-dash difference is exactly what keeps the codegen's `--il-t-*` scraper o
 | `--il-brand-name-size` | derived | type size of the **text** wordmark — ignored when `wordmarkSrc` is set |
 
 `ShellGeometry` (the `geometry` prop) maps 1:1 onto the first three via inline styles on the shell
-element; numbers are treated as px, omitted fields leave the stylesheet default standing.
+element; numbers are treated as px, omitted fields leave the stylesheet default standing. The two row
+heights have no `geometry` field — override them on `.il-shell`. The gap between rows is not a
+property: it is a literal `margin-bottom: 8px` on `.il-sidebar-area .nav-link`, and both label and
+icon get a fixed `line-height: 20px`.
 
 ### Three ways to write these wrong, all silent
 
@@ -158,13 +170,16 @@ never defined `--danger-solid`, `--danger-solid-hover` and `--danger-on-solid` g
 fallbacks — which is a shipped colour nobody chose. The fix is to define those three tokens, **not**
 to restyle `.il-profile-logout`.
 
-## The 52 classes
+## The 59 classes
 
 Package-owned. Do not restyle them from app CSS: `.il-shell` and `.il-brand` are also the token alias
 scope, so redefining either can strand the alias block.
 
 - **Shell** — `il-shell` `il-content-area` `il-sidebar-area` `il-sidebar-overlay` `il-is-mini`
   `il-hide-mini` `il-show-sidebar` `il-fixed-topbar` `il-fixed-sidebar` `il-header-hidden`
+  `il-has-footer`
+- **Footer** — `il-footer` `il-footer-start` `il-footer-center` `il-footer-end` `il-footer-sep`
+  `il-footer-link`
 - **Topbar** — `il-topbar` `il-topbar-lead` `il-topbar-hidden` `il-logo-space` `il-icon-btn`
   `il-role-badge` `il-avatar` `il-avatar-btn`
 - **Dropdowns** — `il-dd` `il-dd-end` `il-dd-header` `il-dd-width` `il-mega`
@@ -178,6 +193,8 @@ scope, so redefining either can strand the alias block.
 
 Two are worth knowing as **hooks for your own selectors** rather than as things to restyle:
 `il-active-link` (the current row) and `il-is-mini` (the collapsed state on the shell root).
+`il-has-footer` is the same kind of hook — `FullLayout` puts it on `.il-content-area` when `footer`
+is given.
 
 ## RTL
 
