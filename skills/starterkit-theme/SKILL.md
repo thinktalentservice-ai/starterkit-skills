@@ -26,19 +26,19 @@ block, and optionally a MUI theme wired to the same variables.
 
 | | |
 |---|---|
-| Package version | **1.5.1** — npm `latest` on 2026-11-20, published 2026-11-18T10:11:19Z |
-| `TOKENS_VERSION` | `9451b3ea404a` (the same hash as 1.4.1 — the name set did not change) |
+| Package version | **1.6.0** — npm `latest` on 2026-11-25, published 2026-11-25T13:40:47Z. A typography-only release: `presets/*.css`, `bootstrap-bridge.css`, `schema.json` and every `dist/*.d.ts` are byte-identical to 1.5.1 |
+| `TOKENS_VERSION` | `9451b3ea404a` (the same hash as 1.4.1 and 1.5.1 — the name set did not change) |
 | Root tokens | **205** (`ROOT_TOKEN_NAMES.length`); the light block declares **100** (`LIGHT_TOKEN_NAMES.length`) — not all of them differ from dark any more |
-| Light-name fingerprint | `9529c7a66ab1` — sha256 of `LIGHT_TOKEN_NAMES.join('\n')`, first 12 hex (was `0f646c594950` at 1.4.1). See [Staleness](#staleness--how-to-re-derive) |
+| Light-name fingerprint | `9529c7a66ab1` — sha256 of `LIGHT_TOKEN_NAMES.join('\n')`, first 12 hex (unchanged since 1.5.1; was `0f646c594950` at 1.4.1). See [Staleness](#staleness--how-to-re-derive) |
 | Type-surface fingerprint | **not re-derived.** The 1.4.1 value `0e940b45aeac` came from a method this skill never recorded, and could not be reproduced from the published `dist/*.d.ts` by any obvious hash, so it is dropped rather than guessed. The type surface did change: `PresetConfig.overrides`, `PresetSpec.overrides`, the `Tuning` type and `SerializeOptions.alwaysLight` are new |
 | Source | <https://github.com/thinktalentservice-ai/starterkit-theme> |
 | npm | <https://www.npmjs.com/package/@devopsnext/starterkit-theme> |
 
 **How much to trust each section:** the suffix table, token inventory, entry-point map, preset values
-and MUI mapping are derived from the **published 1.5.1 tarball** — `dist/*.d.ts`, `dist/mui.js`,
+and MUI mapping are derived from the **published 1.6.0 tarball** — `dist/*.d.ts`, `dist/mui.js`,
 `presets/*.css`, `schema.json` — and from `src/presets/{base,tuning,think,elemetrik}.ts` /
 `src/engine/ladder.ts` in the source repo. Authoritative. *Choosing*, *Anti-patterns* and *Red flags*
-are judgement. If the installed version has moved past 1.5.1, see
+are judgement. If the installed version has moved past 1.6.0, see
 [Staleness](#staleness--how-to-re-derive) before trusting a table.
 
 `TOKENS_VERSION` is the package's own content hash **over the token NAME set** — it moves when the
@@ -47,6 +47,23 @@ or deleted. **If it matches, that proves much less than it used to:** 1.4.1 → 
 both counts untouched while changing almost every colour *value*, nine light-block memberships, the
 light radii and the scheme behaviour of several fills. The hash is a names-only signal; values need a
 sheet diff.
+
+### What changed in 1.6.0
+
+Typography only — no token, value or preset sheet moved.
+
+- **MUI weights soften to 600.** `h1`/`h2` were 800, `h3`/`h4` and `overline` were 700; all are now
+  600 (`h5`/`h6` were already 600). The filled/outlined `MuiChip` label is 600 (was 700).
+- **MUI body sizes drop a step.** `body1` is `0.8125rem` (13px, was 15px) at line-height 1.6; `body2` is
+  `0.75rem` (12px, was 13px). Anything inheriting body1 — `Typography` with no variant, list text,
+  dialog content — shrinks by 2px.
+- **MUI fields are 12px across the board.** `MuiInputBase` root and `::placeholder` are 12px (were
+  14px / 13px); new `MuiInputAdornment` override pins the adornment and its nested `Typography` to
+  12px; new `MuiFormHelperText` override sets helper text to 11px / weight 400.
+- **`styles.css`** gains `.modal-title { font-size: 15px }` (Bootstrap/reactstrap modal title — a
+  class selector, so it beats the `<h5>` it sits on whatever the load order) and `.status-chip` drops
+  to weight 600 (was 700).
+- The published README now describes `styles.css` correctly (structural CSS, not a token sheet).
 
 ### What changed in the 1.4.1 → 1.5.1 window
 
@@ -90,14 +107,14 @@ see the history.)
 pnpm add @devopsnext/starterkit-theme@<version-from-step-1>
 ```
 
-At the time this file was written step 1 answered `1.5.1`, so step 2 was:
+At the time this file was written step 1 answered `1.6.0`, so step 2 was:
 
 ```bash
-pnpm add @devopsnext/starterkit-theme@1.5.1
+pnpm add @devopsnext/starterkit-theme@1.6.0
 ```
 
-`package.json` must end up holding the bare number — `"@devopsnext/starterkit-theme": "1.5.1"`.
-**Open it and check.** If your client widened it to `"^1.5.1"`, re-add with `--save-exact`
+`package.json` must end up holding the bare number — `"@devopsnext/starterkit-theme": "1.6.0"`.
+**Open it and check.** If your client widened it to `"^1.6.0"`, re-add with `--save-exact`
 (npm/pnpm) or `--exact` (yarn).
 
 **Why not just `@latest`.** It installs the same code, but every client writes a **caret** range
@@ -124,11 +141,11 @@ import "@devopsnext/starterkit-theme/styles.css";           // structural CSS th
 
 **`styles.css` defines no tokens.** It ships `.animate-ib-*`, `.delay-*`, `.glass-card{,-dark}`,
 `.mesh-bg{,-subtle}`, `.text-gradient-{role}`, `.glow-{role}`, `.status-chip`, a `--ic-card-focus-ring`
-correction for the card package, `box-sizing` on `*`, and a `body` background/colour/font. The
-package README calls it "Think's static token sheet" — **the file is right and the README is wrong.**
-(The published 1.5.1 README still says so; the source repo's README was corrected after that release,
-so a later version may not. `styles.css`, `bootstrap-bridge.css` and `schema.json` are identical
-between 1.4.1 and 1.5.1.)
+correction for the card package, `box-sizing` on `*`, a `body` background/colour/font, and (1.6.0) a
+`.modal-title { font-size: 15px }` for Bootstrap modals. READMEs through 1.5.1 called it "Think's
+static token sheet" — that was wrong; the 1.6.0 README calls it brand-independent structural CSS,
+which matches the file. (`bootstrap-bridge.css` and `schema.json` are identical from 1.4.1 through
+1.6.0; `styles.css` was identical from 1.4.1 to 1.5.1 and changed only in typography at 1.6.0.)
 A preset sheet (`presets/<id>.css`) or an SSR-injected brand block is the token source; `styles.css`
 alone gives you 205 `var()`s resolving to nothing.
 
@@ -486,11 +503,14 @@ onto the other. Do not assume a brand document can be fed straight to `makePrese
 
 ## Red flags — stop
 
-- About to run `pnpm add …@latest`, `@^1`, `@~1.5` or a bare `pnpm add <pkg>` → all of them record a
+- About to run `pnpm add …@latest`, `@^1`, `@~1.6` or a bare `pnpm add <pkg>` → all of them record a
   **range**. Look up the latest version, then install that literal number.
-- `package.json` shows `"^1.5.1"` rather than `"1.5.1"` → re-add with `--save-exact`.
+- `package.json` shows `"^1.6.0"` rather than `"1.6.0"` → re-add with `--save-exact`.
 - About to install the version this file names without re-checking the registry → check first; the
-  latest may have moved past 1.5.1.
+  latest may have moved past 1.6.0.
+- Bumping from ≤1.5.1 and an MUI screen suddenly reads smaller and lighter → that is 1.6.0's
+  typography (body1 13px, fields 12px, headings 600), not a broken font load. Do not "fix" it with
+  `sx` sizes; if a product needs the old scale, override `typography` once in `createTheme(base, …)`.
 - About to write a hex literal anywhere in app CSS, `sx` or an inline style → pick a token by job.
 - About to use `--{f}-border` for a border that means something → use `--{f}`.
 - About to hardcode a label colour over a brand fill → `--{f}-on-solid`.
@@ -511,7 +531,7 @@ onto the other. Do not assume a brand document can be fed straight to `makePrese
 
 ## Staleness — how to re-derive
 
-This file documents 1.5.1. Nothing enforces that; check it. Compare three numbers — what the registry
+This file documents 1.6.0. Nothing enforces that; check it. Compare three numbers — what the registry
 publishes, what `package.json` pins, and what is actually installed:
 
 ```bash
@@ -531,11 +551,11 @@ the name set, and 1.4.1 → 1.5.1 moved almost every *value* while the name set 
 node -p "const t=require('@devopsnext/starterkit-theme'); [t.TOKENS_VERSION, t.ROOT_TOKEN_NAMES.length, t.LIGHT_TOKEN_NAMES.length].join(' ')"
 ```
 
-Expected: `9451b3ea404a 205 100` (verified against the published 1.5.1 tarball; identical to 1.4.1).
+Expected: `9451b3ea404a 205 100` (verified against the published 1.6.0 tarball; identical to 1.4.1 and 1.5.1).
 If any of them differs, the **name set** moved. If all three hold, **the names still stand — the values
 may not.** That hash is taken over the token **name** set only, and the 1.4.1 → 1.5.1 window proved it:
 same three numbers, different light-block membership (9 names in, 9 out) and a re-tuned palette. So also
-fingerprint the light-block names (expected `9529c7a66ab1` at 1.5.1):
+fingerprint the light-block names (expected `9529c7a66ab1` at 1.5.1 and 1.6.0):
 
 ```bash
 node -p "const t=require('@devopsnext/starterkit-theme'); require('crypto').createHash('sha256').update(t.LIGHT_TOKEN_NAMES.join('\n')).digest('hex').slice(0,12)"
