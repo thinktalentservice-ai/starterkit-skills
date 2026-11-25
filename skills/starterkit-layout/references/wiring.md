@@ -1,7 +1,7 @@
 # Wiring the shell — the full recipe
 
 Loaded on demand from [../SKILL.md](../SKILL.md). Everything here is derived from
-`@devopsnext/starterkit-layout@1.5.2` and from the reference wiring in
+`@devopsnext/starterkit-layout@1.6.0` and from the reference wiring in
 `template-starterkit-nextjs` — the only app known to be on the current version.
 
 ## 1. The stylesheet, once, at the app root
@@ -342,7 +342,7 @@ pnpm build && pnpm pack
 ```
 
 ```bash
-pnpm add ./../starterkit-layout/devopsnext-starterkit-layout-1.5.2.tgz
+pnpm add ./../starterkit-layout/devopsnext-starterkit-layout-1.6.0.tgz
 ```
 
 A linked package resolves react from its own directory, and React identity is per module instance —

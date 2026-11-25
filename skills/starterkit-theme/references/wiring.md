@@ -1,7 +1,7 @@
 # Wiring `@devopsnext/starterkit-theme`
 
 Companion to [SKILL.md](../SKILL.md). Read that first for the token decision table; this file covers
-getting the tokens onto the page and into MUI. Derived from the published 1.5.1 tarball
+getting the tokens onto the page and into MUI. Derived from the published 1.6.0 tarball
 (`dist/*.d.ts`, `dist/mui.js`, `presets/*.css`) and from the reference host,
 `template-starterkit-nextjs`.
 
@@ -174,6 +174,17 @@ const theme = createTheme(base, {
 
 Override the **family only**. Weight, size, letter-spacing and line-height are the package's — this is
 a wiring fix, not a restyle.
+
+**The type scale `createStarterkitTheme()` ships (1.6.0).** Headings `h1`–`h6` are all weight **600**
+(`h1`/`h2` were 800 and `h3`/`h4` 700 through 1.5.1) at 2.125 / 1.75 / 1.375 / 1.125 / 1 / 0.875rem;
+`overline` 600 at 0.625rem; `body1` **0.8125rem (13px)**, line-height 1.6 (was 15px); `body2`
+**0.75rem (12px)** (was 13px). Component overrides: `MuiChip` label 600 / 10px uppercase;
+`MuiInputBase` root and `::placeholder` **12px** (were 14px / 13px — the placeholder is pinned
+explicitly because browsers do not inherit it reliably); `MuiInputAdornment` 12px, including its nested
+`Typography`, so a "$" or "kg" no longer renders at body1 size beside 12px input text;
+`MuiFormHelperText` **11px / 400**. The reason given in the source: Poppins sets large and heavy for its
+nominal size, so the old 15/13px pair read a size too loud next to the 12px secondary text elsewhere in
+the shell.
 
 ## React bindings
 

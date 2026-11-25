@@ -1,7 +1,7 @@
 # The `il-*` namespace, the two custom-property layers, and the cascade
 
 Loaded on demand from [../SKILL.md](../SKILL.md). Inventories are scraped from
-`@devopsnext/starterkit-layout@1.5.2`'s published `styles.css` (`07f3751166da`): **59 classes, 18
+`@devopsnext/starterkit-layout@1.6.0`'s published `styles.css` (`c34b40d0503d`): **62 classes, 18
 `--il-*` geometry properties, 29 `--il-t-*` token aliases.** Re-derive with the commands in the
 skill's Staleness section rather than trusting these counts after a bump.
 
@@ -107,7 +107,7 @@ the one-dash difference is exactly what keeps the codegen's `--il-t-*` scraper o
 
 | Property | Default | What it positions |
 |---|---|---|
-| `--il-sidebar-width` | `240px` | open sidebar width |
+| `--il-sidebar-width` | `204px` | open sidebar width (240px through 1.5.2). Also caps `.il-nav-tip`'s `max-width` |
 | `--il-mini-sidebar-width` | `80px` | collapsed rail width |
 | `--il-topbar-height` | `59px` | topbar height; read by `useHeaderAutoHide` |
 | `--il-row-height` | `40px` | sidebar nav row height — **fixed**, with zero vertical padding, so a row no longer depends on icon or label metrics. Collapsed, the label is `display: none` and an icon font with `line-height: 1` is shorter than a 13px label, which used to make collapsed rows 2–8px shorter than expanded ones (1.5.1) |
@@ -128,6 +128,13 @@ element; numbers are treated as px, omitted fields leave the stylesheet default 
 heights have no `geometry` field — override them on `.il-shell`. The gap between rows is not a
 property: it is a literal `margin-bottom: 8px` on `.il-sidebar-area .nav-link`, and both label and
 icon get a fixed `line-height: 20px`.
+
+**Label width is not a property either (1.6.0).** A row's label is bounded by the column, not by a
+token: `.il-sidebar-area .il-sidebar-nav > .nav` is `flex-wrap: nowrap` (Bootstrap's `.nav` wraps, and
+a wrapping column sizes its line to the widest row's max-content — one long label made every row 470px
+in a 204px sidebar), `.il-hide-mini` and its inner `div` are `min-width: 0`, and `.il-nav-label` carries
+the ellipsis. `.il-nav-trail` and the row `.badge` are `flex-shrink: 0`. Narrow the sidebar through
+`--il-sidebar-width` and the labels follow; do not size `.il-nav-label` yourself.
 
 ### Three ways to write these wrong, all silent
 
@@ -170,7 +177,7 @@ never defined `--danger-solid`, `--danger-solid-hover` and `--danger-on-solid` g
 fallbacks — which is a shipped colour nobody chose. The fix is to define those three tokens, **not**
 to restyle `.il-profile-logout`.
 
-## The 59 classes
+## The 62 classes
 
 Package-owned. Do not restyle them from app CSS: `.il-shell` and `.il-brand` are also the token alias
 scope, so redefining either can strand the alias block.
@@ -187,7 +194,9 @@ scope, so redefining either can strand the alias block.
   `il-profile-text` `il-profile-name` `il-profile-email` `il-profile-actions` `il-profile-logout`
 - **Sidebar** — `il-sidebar` `il-sidebar-box` `il-sidebar-nav` `il-sidebar-user` `il-sidebar-username`
   `il-sidebar-avatar` `il-nav-icon` `il-nav-caption` `il-submenu` `il-submenu-toggle`
-  `il-active-link` `il-active-parent`
+  `il-active-link` `il-active-parent` `il-nav-label` `il-nav-trail` `il-nav-tip`
+  (the last three are 1.6.0: the truncating label, a group row's badge-and-chevron cluster, and the
+  overflow tooltip — portaled into `.il-shell`, so it lives outside `.il-sidebar-area` in the DOM)
 - **Brand** — `il-brand` `il-brand-mark` `il-brand-mark--bare` `il-brand-name` `il-brand-text`
   `il-brand-tagline` `il-brand-wordmark` `il-brand-wordmark-img`
 

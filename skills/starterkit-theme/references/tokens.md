@@ -1,10 +1,12 @@
-# Token inventory — `@devopsnext/starterkit-theme` 1.5.1
+# Token inventory — `@devopsnext/starterkit-theme` 1.6.0
 
 Companion to [SKILL.md](../SKILL.md). This is the full `ROOT_TOKEN_NAMES` set with resolved values,
 for diffing when the drift check fires. Read the decision table in SKILL.md before picking from here —
 this file tells you what exists, not what it owes.
 
 **Verified against the published 1.5.1 tarball**, `presets/think.css` and `presets/elemetrik.css`.
+**Still exact at 1.6.0:** both preset sheets are byte-identical to 1.5.1 (1.6.0 changed MUI typography
+and two `styles.css` rules only), so every value below holds.
 
 ```
 TOKENS_VERSION      9451b3ea404a   (unchanged since 1.4.1 — see the note below)

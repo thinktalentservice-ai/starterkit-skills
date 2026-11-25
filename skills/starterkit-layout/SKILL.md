@@ -25,10 +25,10 @@ and the content.**
 
 | | |
 |---|---|
-| Package version | **1.5.2** — npm `latest` on 2026-11-20, published 2026-11-19T10:17:52Z. **1.5.1 was never published to npm** — its sidebar row fix first shipped in 1.5.2; 1.5.0 (2026-11-05T05:30:56Z) added `Footer` |
-| `dist/index.d.ts` | `febbbed54173` — sha256, first 12 hex ([command](#staleness--how-to-re-derive)) |
+| Package version | **1.6.0** — npm `latest` on 2026-11-25, published 2026-11-25T13:41:54Z. 1.6.0 truncates long nav labels with an overflow tooltip and narrows the sidebar to 204px. 1.5.2 (2026-11-19T10:17:52Z) shipped the sidebar row fix — **1.5.1 was never published to npm**; 1.5.0 (2026-11-05T05:30:56Z) added `Footer` |
+| `dist/index.d.ts` | `a9c15e5b3b02` — sha256, first 12 hex ([command](#staleness--how-to-re-derive)). The only change from 1.5.2 (`febbbed54173`) is the `ShellGeometry.sidebarWidth` doc comment (`Default 240.` → `Default 204.`); no export was added or removed |
 | `dist/brand.d.ts` | `9b9aa264267d` (unchanged since 1.4.1) |
-| `styles.css` | `07f3751166da` — 59 `il-*` classes, 18 `--il-*` geometry properties, 29 `--il-t-*` token aliases |
+| `styles.css` | `c34b40d0503d` — 62 `il-*` classes, 18 `--il-*` geometry properties, 29 `--il-t-*` token aliases |
 | Source | <https://github.com/thinktalentservice-ai/starterkit-layout> |
 | npm | <https://www.npmjs.com/package/@devopsnext/starterkit-layout> |
 | Reference wiring | `template-starterkit-nextjs` → `src/app/(DashboardLayout)/DashboardShell.jsx` |
@@ -67,20 +67,20 @@ Or read it off the package page — the version is at the top right:
 pnpm add @devopsnext/starterkit-layout@<version-from-step-1>
 ```
 
-At the time this file was written step 1 answered `1.5.2`, so step 2 was:
+At the time this file was written step 1 answered `1.6.0`, so step 2 was:
 
 ```bash
-pnpm add @devopsnext/starterkit-layout@1.5.2
+pnpm add @devopsnext/starterkit-layout@1.6.0
 ```
 
-`package.json` must end up holding the bare number — `"@devopsnext/starterkit-layout": "1.5.2"`.
-**Open it and check.** If your client widened it to `"^1.5.2"`, re-add with `--save-exact`
+`package.json` must end up holding the bare number — `"@devopsnext/starterkit-layout": "1.6.0"`.
+**Open it and check.** If your client widened it to `"^1.6.0"`, re-add with `--save-exact`
 (npm/pnpm) or `--exact` (yarn).
 
 **Why not `@latest`.** It installs the same code, but every client writes a **caret** range instead
 of the number. A caret lets a later minor bump move the whole app's chrome — every page, not one
 component — with no review and no diff, and it fails any `pinned === installed` check. Same for
-`@^1`, `@~1.5`, `@*` and a bare `pnpm add <pkg>`. The point of step 1 is not to avoid new versions;
+`@^1`, `@~1.6`, `@*` and a bare `pnpm add <pkg>`. The point of step 1 is not to avoid new versions;
 it is to take the newest one **deliberately**, on a line someone can review. Upgrading is the same
 two steps, then [Staleness](#staleness--how-to-re-derive) before trusting the tables here.
 
@@ -267,6 +267,24 @@ slides the icon and label (`transform: none !important` on `.il-is-mini` rows), 
 over 0.2s (off under `prefers-reduced-motion`), and section captions are hidden with `visibility` so
 they keep their height.
 
+**Long labels truncate, with a tooltip only when cut (1.6.0).** Every row title — leaf, group parent
+and group child — renders through an internal `NavLabel` (not exported) as `<span class="il-nav-label">`
+with `overflow: hidden; text-overflow: ellipsis; white-space: nowrap`. On hover or keyboard focus of the
+row, and **only if the text is actually clipped** (`scrollWidth > clientWidth`), the full title appears
+in `.il-nav-tip`: portaled into the nearest `.il-shell`/`.il-brand` (so it keeps the token aliases),
+`position: fixed` beside the row (mirrored under RTL), `z-index: 1080`, wrapping rather than truncating
+again, capped at `min(320px, 100vw − sidebar − 24px)`. It is hoverable (a 120ms hide delay lets the
+pointer cross onto it), dismissed by Escape, re-placed on scroll and resize, and hidden when the row
+scrolls out of the sidebar's viewport — the WCAG 1.4.13 trio. The tip is `aria-hidden`; the full text
+is already in the link's accessible name. A group's badge and chevron sit in `.il-nav-trail` and never
+shrink — the label gives way first. For the ellipsis to work, the nav list is `flex-wrap: nowrap`
+(Bootstrap's `.nav` wraps, which sized every row to the longest label) and each flex wrapper between the
+row and the text is released with `min-width: 0`. **Do not reintroduce a `min-width: auto` or a
+`flex-wrap: wrap` on those wrappers from app CSS** — one long label then widens every row and the
+ellipsis never fires. Also in 1.6.0: the open sidebar is **204px** (was 240px), nav row text is
+**12px** (`0.75rem`, was 13px), the content column's base size is 12px (was 13px), and the brand name,
+mark glyph, tagline, role badge, dropdown header and nav captions are weight **600** (was 700).
+
 ### `toNavItems` — raw API rows → `NavItem[]`
 
 ```jsx
@@ -434,7 +452,7 @@ small parts; the constants are `LG_BREAKPOINT` (992), `LG_QUERY`, `DEFAULT_MOBIL
 
 ## The two namespaces — package-owned, do not redefine
 
-- **`.il-*`** — 59 classes. `.il-shell` and `.il-brand` are **also the token alias scope**
+- **`.il-*`** — 62 classes. `.il-shell` and `.il-brand` are **also the token alias scope**
   (`:is(.il-shell, .il-brand)`), so redefining either is not merely a style clash — it can strand the
   alias block.
 - **`--il-t-*`** — 29 vendored token aliases, each `--il-t-X: var(--X, <vendored default>)`.
@@ -464,6 +482,9 @@ equal-specificity caveat against Bootstrap: [references/namespace.md](references
   semantics entirely** — wrap it yourself. (`headerCenterSlot` is already wrapped in
   `<li className="nav-item">`.)
 - The overlay is a `<button>` with an accessible name, not a `<div>`.
+- A truncated nav label's tooltip (1.6.0) shows on focus as well as hover, stays while the pointer is
+  on it, and closes on Escape (WCAG 1.4.13). It is `aria-hidden` because the full title is already the
+  row's accessible name — do not add a `title` attribute on top, or the browser paints a second tooltip.
 - There is **no focus trap** on the drawer — only `inert`, Escape and the scroll lock.
 
 ## Anti-patterns
@@ -502,6 +523,11 @@ equal-specificity caveat against Bootstrap: [references/namespace.md](references
 - **You are bumping from ≤1.4.1.** 1.5.1 (shipped as 1.5.2 — 1.5.1 was never published) changed the
   sidebar's row box: fixed 40px/36px row heights, one 8px gap, no `mb-2` on rows. A pixel-tuned
   override of `.nav-link` padding or margin, or a selector on `.nav-link.mb-2`, no longer lands.
+- **You are bumping from ≤1.5.2.** 1.6.0 narrowed the open sidebar from 240px to **204px** and dropped
+  nav text to 12px, so a layout that assumed 240px of content offset, or a screenshot baseline, moves.
+  If you want the old width back, pass `geometry={{ sidebarWidth: 240 }}` — do not restyle
+  `.il-sidebar-box`. Row titles are now `<span class="il-nav-label">` inside the row instead of a bare
+  `<span>`, so an app selector like `.nav-link span:first-child` may now hit a different element.
 - **You are writing a colour, radius or shadow literal into a shell override.** Everything the shell
   paints comes from a design token — see the `starterkit-theme` skill.
 - **You are adding a CSS rule for an `.il-*` class that also carries a Bootstrap component class**
