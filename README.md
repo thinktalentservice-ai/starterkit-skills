@@ -54,6 +54,7 @@ frontmatter `description` lists the full set of triggers and symptoms.
 | [`starterkit-card`](skills/starterkit-card/SKILL.md) | `starterkit-card-component` 2.3.1 | Cards, panels, tiles, KPI blocks and clickable content surfaces. |
 | [`starterkit-table`](skills/starterkit-table/SKILL.md) | `starterkit-table` 0.1.0 | Data tables on `material-react-table`: filtering, selection, row and bulk actions. |
 | [`starterkit-skeleton-loader`](skills/starterkit-skeleton-loader/SKILL.md) | `starterkit-skeleton-loader` 0.2.1 | Loading states and skeletons with `<AutoSkeleton>`, including project-wide capture. |
+| [`starterkit-css-imports`](skills/starterkit-css-imports/SKILL.md) | Next.js 16.4, `sass-embedded` 1.108, Tailwind 4.3 | Where each global stylesheet is imported (`layout.jsx`, `style.scss`, `globals.css`), with a gate that finds and fixes Sass-hoisted CSS imports. |
 
 ### App behaviour
 
@@ -93,6 +94,11 @@ Two skills ship a setup script. Run it from the root of **your** project, where
 |---|---|
 | `node <skill-dir>/scripts/setup-capture.mjs` (`starterkit-skeleton-loader`) | The `skeleton:capture` and `skeleton:list` package scripts, plus the capture script they run. |
 | `node <skill-dir>/scripts/setup-intro.mjs` (`starterkit-intro`) | The `lint:intro` gate and, for the Next.js App Router, `intro:list` and `intro:capture`. |
+
+`starterkit-css-imports` ships a checker instead: `node <skill-dir>/scripts/check-css-imports.mjs`
+reports misplaced stylesheet imports and exits 1 on errors, and `--fix` moves Sass-hoisted CSS
+imports into the layout without changing cascade order. It has no dependencies; copy it into your
+project's `scripts/` to use it as a `lint:css-imports` gate.
 
 ## Managing installed skills
 
