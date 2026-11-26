@@ -2,7 +2,7 @@
 name: starterkit-layout
 description: Use when building, wiring, restyling, reviewing or migrating the dashboard shell of an app that uses @devopsnext/starterkit-layout — the topbar/header, vertical sidebar, navigation list, header dropdowns, profile menu, page footer, mobile drawer, mini-sidebar collapse, brand marks or auth-page logo; when installing or pinning the package; when a nav row must run a script instead of navigating; and when diagnosing symptoms like the shell rendering as a broken vertical stack, the mobile drawer visible below `lg`, a tenant logo painted 32×32 inside a gradient box, the content column reading grey in light mode, a nav row that never highlights, a CLICK row that silently does nothing, `Invalid hook call` after a `link:` install, or a profile photo that 401s and always falls back to initials.
 license: MIT
-compatibility: React 18+ consumer, ESM or CJS, Node 18+. Peers — react, react-dom, reactstrap >= 9.2, motion >= 12, simplebar-react >= 3.3. NO framework peer since 1.4.0. The host must already load Bootstrap 5.3 utility CSS. Install commands shown for pnpm; npm and yarn work the same way.
+compatibility: React 18+ consumer, ESM or CJS, Node 18+. Peers — react, react-dom, reactstrap >= 9.2, motion >= 12, simplebar-react >= 3.3; optional peer @devopsnext/starterkit-theme ^1.7.0. NO framework peer since 1.4.0. The host must already load Bootstrap 5.3 utility CSS. Install commands shown for pnpm; npm and yarn work the same way.
 metadata:
   author: thinktalentservice-ai
   version: "1.0"
@@ -25,10 +25,10 @@ and the content.**
 
 | | |
 |---|---|
-| Package version | **1.6.0** — npm `latest` on 2026-11-25, published 2026-11-25T13:41:54Z. 1.6.0 truncates long nav labels with an overflow tooltip and narrows the sidebar to 204px. 1.5.2 (2026-11-19T10:17:52Z) shipped the sidebar row fix — **1.5.1 was never published to npm**; 1.5.0 (2026-11-05T05:30:56Z) added `Footer` |
-| `dist/index.d.ts` | `a9c15e5b3b02` — sha256, first 12 hex ([command](#staleness--how-to-re-derive)). The only change from 1.5.2 (`febbbed54173`) is the `ShellGeometry.sidebarWidth` doc comment (`Default 240.` → `Default 204.`); no export was added or removed |
+| Package version | **1.7.0** — npm `latest` on 2026-11-26, published 2026-11-25T16:02:39Z. 1.7.0 keeps the sidebar rail dark in both schemes, adds five sidebar ink aliases, re-vendors every fallback from theme 1.7.0 and declares the theme as an optional peer; both `.d.ts` files are unchanged. 1.6.0 (2026-11-25T13:41:54Z) truncates long nav labels with an overflow tooltip and narrows the sidebar to 204px. 1.5.2 (2026-11-19T10:17:52Z) shipped the sidebar row fix — **1.5.1 was never published to npm**; 1.5.0 (2026-11-05T05:30:56Z) added `Footer` |
+| `dist/index.d.ts` | `a9c15e5b3b02` — sha256, first 12 hex ([command](#staleness--how-to-re-derive)). Same at 1.6.0 and 1.7.0. The only change from 1.5.2 (`febbbed54173`) is the `ShellGeometry.sidebarWidth` doc comment (`Default 240.` → `Default 204.`); no export was added or removed |
 | `dist/brand.d.ts` | `9b9aa264267d` (unchanged since 1.4.1) |
-| `styles.css` | `c34b40d0503d` — 62 `il-*` classes, 18 `--il-*` geometry properties, 29 `--il-t-*` token aliases |
+| `styles.css` | `c5f8c8927d7c` — 62 `il-*` classes, 18 `--il-*` geometry properties, 34 `--il-t-*` token aliases (`c34b40d0503d` and 29 at 1.6.0) |
 | Source | <https://github.com/thinktalentservice-ai/starterkit-layout> |
 | npm | <https://www.npmjs.com/package/@devopsnext/starterkit-layout> |
 | Reference wiring | `template-starterkit-nextjs` → `src/app/(DashboardLayout)/DashboardShell.jsx` |
@@ -67,14 +67,14 @@ Or read it off the package page — the version is at the top right:
 pnpm add @devopsnext/starterkit-layout@<version-from-step-1>
 ```
 
-At the time this file was written step 1 answered `1.6.0`, so step 2 was:
+At the time this file was written step 1 answered `1.7.0`, so step 2 was:
 
 ```bash
-pnpm add @devopsnext/starterkit-layout@1.6.0
+pnpm add @devopsnext/starterkit-layout@1.7.0
 ```
 
-`package.json` must end up holding the bare number — `"@devopsnext/starterkit-layout": "1.6.0"`.
-**Open it and check.** If your client widened it to `"^1.6.0"`, re-add with `--save-exact`
+`package.json` must end up holding the bare number — `"@devopsnext/starterkit-layout": "1.7.0"`.
+**Open it and check.** If your client widened it to `"^1.7.0"`, re-add with `--save-exact`
 (npm/pnpm) or `--exact` (yarn).
 
 **Why not `@latest`.** It installs the same code, but every client writes a **caret** range instead
@@ -107,11 +107,14 @@ Both are real, and the first is the package's only failure mode that **errors no
    package cannot `@import` it; see the token contract.
 
 **Fonts are not requested.** The type tokens carry family names only and fall back to `system-ui`.
-Load Outfit and Plus Jakarta Sans yourself (`next/font` is self-hosted and CSP-safe).
+Load Poppins yourself, the fallback face since 1.7.0 (`next/font` is self-hosted and CSP-safe).
 
 ### Peer dependencies
 
-`react`, `react-dom`, `reactstrap`, `motion`, `simplebar-react`. `dependencies` is empty.
+`react`, `react-dom`, `reactstrap`, `motion`, `simplebar-react`, plus (1.7.0) an **optional**
+`@devopsnext/starterkit-theme` `^1.7.0`. The shell renders without the theme on its vendored fallbacks;
+if you install it, keep it at 1.7.0 or later, because earlier versions define no `--sidebar-fg*` and
+paint a white `--sidebar-bg` in light. `dependencies` is empty.
 
 **There is no framework peer as of 1.4.0.** Nav rows render as plain `<a href>`, so the sidebar can
 point at absolute URLs in sibling apps — which no router could client-navigate anyway. A row is a
@@ -455,7 +458,7 @@ small parts; the constants are `LG_BREAKPOINT` (992), `LG_QUERY`, `DEFAULT_MOBIL
 - **`.il-*`** — 62 classes. `.il-shell` and `.il-brand` are **also the token alias scope**
   (`:is(.il-shell, .il-brand)`), so redefining either is not merely a style clash — it can strand the
   alias block.
-- **`--il-t-*`** — 29 vendored token aliases, each `--il-t-X: var(--X, <vendored default>)`.
+- **`--il-t-*`** — 34 vendored token aliases, each `--il-t-X: var(--X, <vendored default>)`.
   **Generated** upstream by `pnpm sync:tokens`. Never hand-edit one and never set one yourself; set
   the design token it reads.
 - **`--il-*`** (one dash) — 18 geometry properties this package owns, absent from the token sheet.
@@ -528,6 +531,13 @@ equal-specificity caveat against Bootstrap: [references/namespace.md](references
   If you want the old width back, pass `geometry={{ sidebarWidth: 240 }}` — do not restyle
   `.il-sidebar-box`. Row titles are now `<span class="il-nav-label">` inside the row instead of a bare
   `<span>`, so an app selector like `.nav-link span:first-child` may now hit a different element.
+- **You are bumping from ≤1.6.0.** 1.7.0 keeps the sidebar rail **dark in both schemes**. On
+  `:is(.il-sidebar-area, .il-sidebar)` the shell re-points `--il-t-fg1` `--il-t-fg2` `--il-t-fg-muted`
+  `--il-t-border` `--il-t-hover-overlay` at the `--sidebar-*` ink tokens. **Delete host overrides**
+  that darkened the rail or set `--il-t-*` there. For a light rail, define `--sidebar-bg` **and** all of
+  `--sidebar-fg1` `--sidebar-fg2` `--sidebar-fg-muted` `--sidebar-border` `--sidebar-hover-overlay`.
+  Your own content in a sidebar slot must use that ink too: `--fg1`/`--fg2` are dark in light. With a
+  theme older than 1.7.0, light mode puts white ink on a white rail.
 - **You are writing a colour, radius or shadow literal into a shell override.** Everything the shell
   paints comes from a design token — see the `starterkit-theme` skill.
 - **You are adding a CSS rule for an `.il-*` class that also carries a Bootstrap component class**
