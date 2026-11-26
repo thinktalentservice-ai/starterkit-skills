@@ -98,7 +98,13 @@ Two skills ship a setup script. Run it from the root of **your** project, where
 `starterkit-css-imports` ships a checker instead: `node <skill-dir>/scripts/check-css-imports.mjs`
 reports misplaced stylesheet imports and exits 1 on errors, and `--fix` moves Sass-hoisted CSS
 imports into the layout without changing cascade order. It has no dependencies; copy it into your
-project's `scripts/` to use it as a `lint:css-imports` gate.
+project's `scripts/` to use it as a `lint:css-imports` gate. Its regression tests run with no install:
+
+```bash
+node --test skills/starterkit-css-imports/tests/check-css-imports.test.mjs
+```
+
+Run them after any change to the checker.
 
 ## Managing installed skills
 
