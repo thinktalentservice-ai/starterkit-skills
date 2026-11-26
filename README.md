@@ -1,89 +1,147 @@
 # starterkit-skills
 
-Agent skills for the Think Talent frontend starter kits, installable with the
+Agent skills for the Think Talent frontend starter kits (the
+`@devopsnext/starterkit-*` packages) and SunEditor v3, installable with the
 [`skills`](https://github.com/vercel-labs/skills) CLI.
 
-## Install
+A skill gives a coding agent what it needs to use a library correctly: how to
+install and wire it, which options to choose, and how to diagnose the failures
+that do not announce themselves, such as a build that passes while the page is
+wrong.
+
+## Quick start
 
 ```bash
-# one skill, into the current project (./.claude/skills, ./.agents/skills, …)
-npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill starterkit-button
+# see what is in here without installing anything
+npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --list
 
+# install one skill into the current project
+npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill starterkit-button
+```
+
+Other install options:
+
+```bash
 # several at once
-npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill starterkit-button --skill starterkit-config-util
+npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill starterkit-theme --skill starterkit-layout
+
+# every skill (you are still asked about agents and scope)
+npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill '*'
 
 # globally, for every project on this machine
 npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill starterkit-button -g
 
-# see what is in here without installing anything
-npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --list
-
-# target specific agents explicitly (otherwise the CLI detects what you have)
-npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill starterkit-button -a claude-code -a cursor
+# target specific agents (otherwise the CLI detects what you have)
+npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill starterkit-button -a claude-code cursor
 ```
 
-## Update
-
-If a skill is already installed, update it in place rather than re-adding it:
-
-```bash
-# update one already-installed skill
-npx skills update starterkit-button
-
-# update everything installed in the current project
-npx skills update
-
-# update only global (user-level) skills
-npx skills update -g
-
-# skip the scope prompt (auto-detects project vs. global)
-npx skills update -y
-```
-
-`npx skills remove` uninstalls interactively.
+Once installed, there is nothing to invoke by hand: the agent loads a skill when
+your request matches its description.
 
 ## Skills
 
-| Skill | Use when |
+"Written against" is the library version each skill documented at the time of
+this README's last update. Each skill's name links to its `SKILL.md`, whose
+frontmatter `description` lists the full set of triggers and symptoms.
+
+### UI and theming
+
+| Skill | Written against | Use it for |
+|---|---|---|
+| [`starterkit-theme`](skills/starterkit-theme/SKILL.md) | `starterkit-theme` 1.7.0 | Colour, gradient, shadow, radius, focus ring and font tokens; light/dark mode, MUI theme and brand presets; migrating legacy hue names. |
+| [`starterkit-layout`](skills/starterkit-layout/SKILL.md) | `starterkit-layout` 1.7.0 | The dashboard shell: topbar, sidebar, navigation, header dropdowns, profile menu, footer, mobile drawer and brand marks. |
+| [`starterkit-button`](skills/starterkit-button/SKILL.md) | `starterkit-button-component` 2.8.2 | Buttons, CTAs, action rows, toolbar controls and link-styled buttons. |
+| [`starterkit-card`](skills/starterkit-card/SKILL.md) | `starterkit-card-component` 2.3.1 | Cards, panels, tiles, KPI blocks and clickable content surfaces. |
+| [`starterkit-table`](skills/starterkit-table/SKILL.md) | `starterkit-table` 0.1.0 | Data tables on `material-react-table`: filtering, selection, row and bulk actions. |
+| [`starterkit-skeleton-loader`](skills/starterkit-skeleton-loader/SKILL.md) | `starterkit-skeleton-loader` 0.2.1 | Loading states and skeletons with `<AutoSkeleton>`, including project-wide capture. |
+
+### App behaviour
+
+| Skill | Written against | Use it for |
+|---|---|---|
+| [`starterkit-config-util`](skills/starterkit-config-util/SKILL.md) | `starterkit-config-util` 0.4.1 | Runtime config, `env.json`, per-host service URLs, third-party integrations, health checks and CSP gates. |
+| [`starterkit-intro`](skills/starterkit-intro/SKILL.md) | `starterkit-intro` 0.1.1 | Per-page product tours and "Take a tour" buttons, with a CI gate for renamed tags. |
+
+All packages above are published under the `@devopsnext/` npm scope.
+
+### Editor
+
+| Skill | Written against | Use it for |
+|---|---|---|
+| [`suneditor-v3`](skills/suneditor-v3/SKILL.md) | `suneditor` 3.4.3 | SunEditor v3 in React/Next.js, and migrating from 2.x or `suneditor-react`. |
+
+## Versions and staleness
+
+A skill is a snapshot. Check the version your project has installed and the
+latest one published before trusting a table of props, tokens or options:
+
+```bash
+npm view @devopsnext/starterkit-theme version
+```
+
+Several `starterkit-*` skills have a "Staleness" section explaining how to
+re-derive their tables from a newer release. If a skill and the installed
+package disagree, the package is right.
+
+## Bundled scripts
+
+Two skills ship a setup script. Run it from the root of **your** project, where
+`<skill-dir>` is wherever the skill was installed. Both accept `--dry-run` and
+`--force`, and neither installs dependencies.
+
+| Script | What it adds to your project |
 |---|---|
-| [`starterkit-button`](skills/starterkit-button/SKILL.md) | Adding, restyling, reviewing or migrating any button, CTA, action row, toolbar control or link-styled-as-button; choosing a `variant=` / `tone=` / `fill=` string; installing or pinning `@devopsnext/starterkit-button-component`; or diagnosing a grey button, an unreadable label on a brand fill, or a translucent button that disappears. |
-| [`starterkit-card`](skills/starterkit-card/SKILL.md) | Adding, restyling, reviewing or migrating any card, panel, tile, KPI/stat block, list-item surface or clickable content container; choosing a `variant=` / `tone=` / `fill=` string; installing or pinning `@devopsnext/starterkit-card-component`; or diagnosing a gradient card that renders grey, an unreadable label on a gradient, content that shifts when the border is removed, or a popover clipped at the card's edge. |
-| [`starterkit-config-util`](skills/starterkit-config-util/SKILL.md) | Adopting, wiring, debugging or extending `@devopsnext/starterkit-config-util` — installing or pinning it, editing `src/config/*`, reading a config key, running the `javascript_integration` table through `loadIntegrations`/`selectIntegrations`, adding a health check or CSP gate, or diagnosing "every user appears signed out" / `undefined/oauth/authorize` / ignored `env.json` overrides / one build served from several hostnames calling the wrong environment's API / a third-party widget that silently never loads. |
-| [`starterkit-intro`](skills/starterkit-intro/SKILL.md) | Adding, wiring, writing or debugging a per-page guided intro / product tour / "Take a tour" help button built on `@devopsnext/starterkit-intro` — mounting `IntroProvider` with any router's pathname and base path, tagging elements with `data-intro`, generating `public/intro/<route>.json` with the `starterkit-intro capture` CLI, adding the `lint:intro` gate (the skill ships it and its setup script) so a renamed tag fails CI, or diagnosing a tour that never starts, a silently skipped step, edited copy users never see, a one-line highlight strip, focus lost after the tour, or a capture that reports "redirected to /login". |
-| [`starterkit-layout`](skills/starterkit-layout/SKILL.md) | Building, wiring, restyling or migrating the dashboard shell from `@devopsnext/starterkit-layout` — the topbar, vertical sidebar, navigation list, header dropdowns, profile menu, mobile drawer, mini-sidebar collapse, brand marks or auth-page logo; installing or pinning the package; making a nav row run a script instead of navigating; or diagnosing a shell that renders as a broken vertical stack, a mobile drawer visible below `lg`, a tenant logo painted inside a gradient box, a nav row that never highlights, or `Invalid hook call` after a `link:` install. |
-| [`starterkit-skeleton-loader`](skills/starterkit-skeleton-loader/SKILL.md) | Adding, replacing, reviewing or debugging any loading state, skeleton, placeholder or shimmer built on `@devopsnext/starterkit-skeleton-loader` — wrapping content in `<AutoSkeleton>`; choosing between `fixture`, `name`, `captured` and `mode="css"`; installing or pinning the package; running the `auto-skeleton` capture command; setting up `skeleton:capture` / `skeleton:list` in `package.json` so one command generates every skeleton in the project (the skill ships the setup script); or diagnosing a skeleton that is one grey block, a wrapper that collapses to zero height, a page blank until JavaScript loads, Bootstrap columns losing their gutters, a fetch that fires twice, bones that change colour at hydration, or a stale `.bones.json`. |
-| [`starterkit-table`](skills/starterkit-table/SKILL.md) | Adding, restyling, reviewing or migrating any data table, filterable/selectable list or row-action column built on `@devopsnext/starterkit-table` (material-react-table); writing a `<KitTable>` prop, `toolbar` option, `idFilter`, `rowActions`, `bulkActions` or `renderLink`; installing or pinning the package; or diagnosing a blank table or placeholder, a console error about unresolved `--card`/`--fg1` tokens, a text column offering "Between" or "Fuzzy", row-action links that reload the page or drop the `basePath`, or an unstyled table because `styles.css` was not imported. |
-| [`starterkit-theme`](skills/starterkit-theme/SKILL.md) | Choosing any colour, gradient, shadow, radius, focus ring or font token from `@devopsnext/starterkit-theme`; deciding between `--primary`, `--primary-text`, `--primary-solid`, `--primary-bg` and `--primary-border`; installing or pinning the package; wiring light/dark mode, a MUI theme, a brand preset or the stylesheet import order; migrating or auto-fixing legacy hue names (`mint`, `electric`, `cobalt`, `amber`, `rose`, `sky`, `--brand-fill`, old preset ids) to the current role names; or diagnosing an outline button that fails contrast, a token that resolves to nothing, or a brand that applies in dark but not light. |
-| [`suneditor-v3`](skills/suneditor-v3/SKILL.md) | Adding, upgrading, configuring, theming or debugging the SunEditor rich-text editor at v3 (`suneditor` 3.x) in React/Next.js — migrating from suneditor 2.x or the v2-only `suneditor-react` wrapper; translating v2 options (`attributesWhitelist`, `imageFileInput`, `videoIframeAttrs`, `resizingBar`, `defaultStyle`, `popupDisplay`, …) and toolbar buttons (`hiliteColor`, `horizontalRule`, `formatBlock`); or diagnosing `getContents is not a function`, a missing `suneditor/dist/css` path, `[SUNEDITOR.plugins.*]` console warnings, white modals on a dark theme, a caret that jumps on every keystroke, or a modal URL field that will not take typing inside an MUI Dialog. |
+| `node <skill-dir>/scripts/setup-capture.mjs` (`starterkit-skeleton-loader`) | The `skeleton:capture` and `skeleton:list` package scripts, plus the capture script they run. |
+| `node <skill-dir>/scripts/setup-intro.mjs` (`starterkit-intro`) | The `lint:intro` gate and, for the Next.js App Router, `intro:list` and `intro:capture`. |
 
-## Layout
+## Managing installed skills
 
-The CLI discovers `SKILL.md` files up to three levels deep, so each skill is a
-directory under `skills/`:
+```bash
+# list installed skills (add -g for global ones)
+npx skills list
+
+# update one skill in place, rather than re-adding it
+npx skills update starterkit-button
+
+# update installed skills (-g global only, -p project only, -y skip the scope prompt)
+npx skills update
+
+# uninstall interactively
+npx skills remove
+```
+
+## Repository layout
+
+Each skill is a directory under `skills/`:
 
 ```
 skills/
   <skill-name>/
-    SKILL.md            # required: YAML frontmatter (name, description) + body
+    SKILL.md            # required: YAML frontmatter + body
     references/         # optional: loaded on demand, keeps SKILL.md small
     scripts/            # optional: executable helpers
-    assets/             # optional: templates, data
 ```
 
-`name` in the frontmatter **must match the directory name**, and must be lowercase
-letters, numbers and single hyphens.
+## Adding or updating a skill
 
-## Adding a skill
-
-1. Create `skills/<name>/SKILL.md` with `name` and `description` frontmatter.
-   Write the `description` as *when to use this*, with concrete triggering
-   symptoms and keywords — that field is all an agent sees when deciding whether
+1. Create `skills/<name>/SKILL.md`. `name` in the frontmatter **must match the
+   directory name**: lowercase letters, numbers and single hyphens.
+2. Write the `description` as *when to use this*, with concrete triggering
+   symptoms and keywords. That field is all an agent sees when deciding whether
    to load the skill. Do not summarise the workflow in it; agents will follow the
    summary instead of reading the body.
-2. Keep `SKILL.md` under ~500 lines. Move long reference material into
+3. Follow the other skills' frontmatter: `license`, `compatibility`, and
+   `metadata` with `author` and `version`.
+4. Aim for under ~500 lines in `SKILL.md`. Move long reference material into
    `references/` so it loads only when needed.
-3. Verify discovery before pushing:
+5. Record the library version the skill was written against. When you move it to
+   a newer release, update the table above too.
+6. Verify discovery from your local checkout before pushing:
    ```bash
-   npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --list
+   npx skills add . --list
    ```
    A skill missing `name` or `description` is silently not found.
+
+## License
+
+[MIT](LICENSE)
