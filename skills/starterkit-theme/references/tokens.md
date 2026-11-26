@@ -1,17 +1,17 @@
-# Token inventory — `@devopsnext/starterkit-theme` 1.6.0
+# Token inventory — `@devopsnext/starterkit-theme` 1.7.0
 
 Companion to [SKILL.md](../SKILL.md). This is the full `ROOT_TOKEN_NAMES` set with resolved values,
 for diffing when the drift check fires. Read the decision table in SKILL.md before picking from here —
 this file tells you what exists, not what it owes.
 
-**Verified against the published 1.5.1 tarball**, `presets/think.css` and `presets/elemetrik.css`.
-**Still exact at 1.6.0:** both preset sheets are byte-identical to 1.5.1 (1.6.0 changed MUI typography
-and two `styles.css` rules only), so every value below holds.
+**Verified against the published 1.7.0 tarball**, `presets/think.css` and `presets/elemetrik.css`.
+Against 1.5.1/1.6.0 the only sheet changes are `--sidebar-bg`, the five new `--sidebar-*` ink tokens
+and the `--tokens-version` literal.
 
 ```
-TOKENS_VERSION      9451b3ea404a   (unchanged since 1.4.1 — see the note below)
-ROOT_TOKEN_NAMES    205
-LIGHT_TOKEN_NAMES   100   (the names the light block declares — the same set in both sheets)
+TOKENS_VERSION      ddc9022b81f7   (9451b3ea404a from 1.4.1 through 1.6.0)
+ROOT_TOKEN_NAMES    210
+LIGHT_TOKEN_NAMES   99    (the names the light block declares — the same set in both sheets)
 CHANNEL_TOKEN_NAMES  22
 PROVENANCE          --tokens-version, --tokens-brand  (emitted by serializeBrandCss({ provenance }) AND already declared in both shipped preset sheets)
 ```
@@ -19,8 +19,11 @@ PROVENANCE          --tokens-version, --tokens-brand  (emitted by serializeBrand
 **The name set did not change between 1.4.1 and 1.5.1** — no token was added, renamed or deleted, so
 the hash and both counts are identical. **Three things did change underneath them:** nearly every
 *value*; the *membership* of the light block (9 names in, 9 out, so the count stayed 100); and the
-scheme behaviour of a few fills. All three are covered below. Each shipped sheet declares **207**
-custom properties on `:root` — the 205 names plus the two provenance ones.
+scheme behaviour of a few fills. All three are covered below. Each shipped sheet declares **212**
+custom properties on `:root` — the 210 names plus the two provenance ones.
+
+**1.6.0 → 1.7.0:** five names added (`--sidebar-fg1` `--sidebar-fg2` `--sidebar-fg-muted`
+`--sidebar-border` `--sidebar-hover-overlay`); `--sidebar-bg` left the light block (100 → 99).
 
 Light block membership, 1.4.1 → 1.5.1 (hand-tuned presets now flip different subsets per brand, so
 both sheets declare the union):
@@ -30,7 +33,7 @@ both sheets declare the union):
 - **Out:** `--success` `--success-channel` `--warning` `--warning-border` `--warning-channel`
   `--danger` `--danger-channel` `--accent-green` `--accent-green-channel` — these are now identical
   in both schemes, so the light block no longer restates them
-- `LIGHT_FLIPPED_TOKEN_NAMES` is the same 100-name set as `LIGHT_TOKEN_NAMES` in 1.5.1.
+- `LIGHT_FLIPPED_TOKEN_NAMES` is the same set as `LIGHT_TOKEN_NAMES` (100 names at 1.5.1, 99 at 1.7.0).
 
 Regenerate the counts with:
 
@@ -39,8 +42,8 @@ node -p "const t=require('@devopsnext/starterkit-theme'); [t.TOKENS_VERSION, t.R
 ```
 
 Those three held across 1.4.1 → 1.5.1 while the light block's membership and almost every value
-moved, so they are not enough on their own. Fingerprint the light-block name list too — `9529c7a66ab1`
-at 1.5.1 (`0f646c594950` at 1.4.1):
+moved, so they are not enough on their own. Fingerprint the light-block name list too — `cfb25e7dd09a`
+at 1.7.0 (`9529c7a66ab1` at 1.5.1–1.6.0, `0f646c594950` at 1.4.1):
 
 ```bash
 node -p "const t=require('@devopsnext/starterkit-theme'); require('crypto').createHash('sha256').update(t.LIGHT_TOKEN_NAMES.join('\n')).digest('hex').slice(0,12)"
@@ -144,8 +147,8 @@ Three things to read out of that table:
 
 ## Surfaces and neutrals — 27
 
-Identical across both presets. The light column is hand-tuned (1.5.0): one white plane — `--background`,
-`--surface`, `--sidebar-bg`, `--card` and `--topbar-bg` are all `#ffffff` — with depth from hairlines
+Identical across both presets. The light column is hand-tuned (1.5.0): one white content plane —
+`--background`, `--surface`, `--card` and `--topbar-bg` are all `#ffffff` — with depth from hairlines
 rather than grey fills, and the neutral ramp is opaque hex where it used to be alpha-black.
 
 | token | dark | light |
@@ -154,7 +157,7 @@ rather than grey fills, and the neutral ramp is opaque hex where it used to be a
 | `--background` | `#0d0f1a` | `#ffffff` |
 | `--surface` | `#10121c` | `#ffffff` |
 | `--surface-elevated` | `#161925` | `#f7f8fa` |
-| `--sidebar-bg` | `#09091a` | `#ffffff` |
+| `--sidebar-bg` | `#0d0f1a` | `#0d0f1a` (not in the light block; the rail stays dark) |
 | `--card` | `#12141f` | `#ffffff` |
 | `--fg1` | `#f0f2ff` | `#0e1525` |
 | `--fg2` | `#8b93b5` | `#465267` |
@@ -180,6 +183,19 @@ rather than grey fills, and the neutral ramp is opaque hex where it used to be a
 
 `--input`'s light value being the keyword `transparent` catches anyone who tries to `color-mix()` or
 parse it. Handle it.
+
+## Sidebar rail ink — 5 (1.7.0)
+
+Same value in both schemes and both presets; none appears in the light block. Use these on any surface
+painted `--sidebar-bg`.
+
+| token | value | use |
+|---|---|---|
+| `--sidebar-fg1` | `#ffffff` | active / hovered nav label |
+| `--sidebar-fg2` | `#ffffff` | resting nav label |
+| `--sidebar-fg-muted` | `rgb(255 255 255 / 0.6)` | section captions |
+| `--sidebar-border` | `rgb(255 255 255 / 0.12)` | rail hairlines |
+| `--sidebar-hover-overlay` | `rgb(255 255 255 / 0.08)` | row hover veil |
 
 ## Focus — 1
 

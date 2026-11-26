@@ -1,7 +1,7 @@
 # Wiring `@devopsnext/starterkit-theme`
 
 Companion to [SKILL.md](../SKILL.md). Read that first for the token decision table; this file covers
-getting the tokens onto the page and into MUI. Derived from the published 1.6.0 tarball
+getting the tokens onto the page and into MUI. Derived from the published 1.7.0 tarball
 (`dist/*.d.ts`, `dist/mui.js`, `presets/*.css`) and from the reference host,
 `template-starterkit-nextjs`.
 
@@ -75,7 +75,7 @@ Render it as exactly one `<style>` in `<head>`:
   document order, and the live editor searches for that id to *replace* rather than append.
 - `provenance` is what makes `serializeBrandCss` emit `--tokens-version` and `--tokens-brand`. The
   shipped `presets/*.css` sheets already declare both as literals (verified at 1.4.1 and 1.5.1 — the
-  sheet has 207 declarations: 205 tokens plus these two), but CSS you build yourself from
+  1.7.0 sheet has 212 declarations: 210 tokens plus these two), but CSS you build yourself from
   `resolveBrand()` does not, so `getComputedStyle` reports empty strings for both unless you pass it.
 - `serializeBrandCss` also takes `alwaysLight` (1.5.0+) — token names to declare in the light block
   even when the value equals `:root`. By default a light value equal to dark is omitted. Pass it only
@@ -115,6 +115,10 @@ theme-creation time** — which is build time. So every intention supplies all o
 | `background.default` / `.paper` | `--background` / `--surface` |
 | `text.primary` / `.secondary` / `.disabled` | `--fg1` / `--fg2` / `--fg-disabled` |
 | `divider` | `--border`, with `dividerChannel: undefined` **explicitly** |
+
+The `MuiDrawer` paper is `background-color: var(--sidebar-bg)` with `color: var(--sidebar-fg1)`
+(the colour since 1.7.0). `ListItemText` secondary, or anything else that sets `text.secondary` itself,
+keeps scheme ink on the dark rail; point it at `--sidebar-fg2`.
 
 **`error` maps to the `danger` family.** There is no `--error-*` token.
 
