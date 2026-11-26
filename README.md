@@ -52,6 +52,7 @@ frontmatter `description` lists the full set of triggers and symptoms.
 | [`starterkit-layout`](skills/starterkit-layout/SKILL.md) | `starterkit-layout` 1.7.0 | The dashboard shell: topbar, sidebar, navigation, header dropdowns, profile menu, footer, mobile drawer and brand marks. |
 | [`starterkit-button`](skills/starterkit-button/SKILL.md) | `starterkit-button-component` 2.8.2 | Buttons, CTAs, action rows, toolbar controls and link-styled buttons. |
 | [`starterkit-card`](skills/starterkit-card/SKILL.md) | `starterkit-card-component` 2.3.1 | Cards, panels, tiles, KPI blocks and clickable content surfaces. |
+| [`starterkit-badge`](skills/starterkit-badge/SKILL.md) | `starterkit-badge-component` 0.2.0 | Status pills, labels, role and category tags; migrating local or MUI badges; solid-fill contrast. |
 | [`starterkit-table`](skills/starterkit-table/SKILL.md) | `starterkit-table` 0.1.0 | Data tables on `material-react-table`: filtering, selection, row and bulk actions. |
 | [`starterkit-skeleton-loader`](skills/starterkit-skeleton-loader/SKILL.md) | `starterkit-skeleton-loader` 0.2.1 | Loading states and skeletons with `<AutoSkeleton>`, including project-wide capture. |
 | [`starterkit-css-imports`](skills/starterkit-css-imports/SKILL.md) | Next.js 16.4, `sass-embedded` 1.108, Tailwind 4.3 | Where each global stylesheet is imported (`layout.jsx`, `style.scss`, `globals.css`), with a gate that finds and fixes Sass-hoisted CSS imports. |
