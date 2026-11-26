@@ -71,6 +71,7 @@ Keep the token mapping global.
   --se-active-dark3-color: var(--primary-text);  // active toolbar button ink
   --se-active-dark5-color: var(--primary-solid); // modal Submit fill
   --se-active-hover-color: var(--primary-solid-hover);
+  --se-btn-primary-color: var(--primary-on-solid); // primary button ink (3.4.3)
 
   --se-dropdown-font-color: var(--fg1);
   --se-controller-background-color: var(--surface-elevated);
@@ -86,10 +87,12 @@ Keep the token mapping global.
 .sun-editor.sun-editor {
   border-radius: var(--radius);
   &:focus-within { border-color: var(--primary-border); box-shadow: 0 0 0 3px var(--ring); }
-  // v3 hard-codes `color: #fff` on the modal Submit, not a variable.
-  .se-btn-primary, .se-btn-primary:hover, .se-btn-primary:focus { color: var(--primary-on-solid); }
 }
 ```
+
+`--se-active-font-color` (3.4.3) is the ink on `--se-active-color` fills, for example the highlighted
+match in the file browser. If you map `--se-active-color`, map a contrasting ink with it. On 3.4.1 the
+primary button ink was a hard-coded `#fff` and needed a `.se-btn-primary` selector override.
 
 The full list of ~130 properties is in `suneditor/src/themes/dark.css` — that
 file is the best template, because it sets every one of them.
