@@ -11,7 +11,7 @@ metadata:
 # starterkit-theme
 
 `@devopsnext/starterkit-theme` is the token engine every other `@devopsnext/starterkit-*` package
-reads. It publishes **205 CSS custom properties** on `:root` (each shipped sheet declares 207 — the two
+reads. It publishes **210 CSS custom properties** on `:root` (each shipped sheet declares 212 — the two
 extra are the `--tokens-version` / `--tokens-brand` provenance pair) plus a light-scheme override
 block, and optionally a MUI theme wired to the same variables.
 
@@ -26,27 +26,46 @@ block, and optionally a MUI theme wired to the same variables.
 
 | | |
 |---|---|
-| Package version | **1.6.0** — npm `latest` on 2026-11-25, published 2026-11-25T13:40:47Z. A typography-only release: `presets/*.css`, `bootstrap-bridge.css`, `schema.json` and every `dist/*.d.ts` are byte-identical to 1.5.1 |
-| `TOKENS_VERSION` | `9451b3ea404a` (the same hash as 1.4.1 and 1.5.1 — the name set did not change) |
-| Root tokens | **205** (`ROOT_TOKEN_NAMES.length`); the light block declares **100** (`LIGHT_TOKEN_NAMES.length`) — not all of them differ from dark any more |
-| Light-name fingerprint | `9529c7a66ab1` — sha256 of `LIGHT_TOKEN_NAMES.join('\n')`, first 12 hex (unchanged since 1.5.1; was `0f646c594950` at 1.4.1). See [Staleness](#staleness--how-to-re-derive) |
+| Package version | **1.7.0** — npm `latest` on 2026-11-26, published 2026-11-25T15:53:35Z. The sidebar-rail release: 5 new `--sidebar-*` ink tokens, `--sidebar-bg` dark in both schemes. `styles.css`, `bootstrap-bridge.css` and `schema.json` are byte-identical to 1.6.0 |
+| `TOKENS_VERSION` | `ddc9022b81f7` (was `9451b3ea404a` from 1.4.1 through 1.6.0) |
+| Root tokens | **210** (`ROOT_TOKEN_NAMES.length`); the light block declares **99** (`LIGHT_TOKEN_NAMES.length`) — not all of them differ from dark any more |
+| Light-name fingerprint | `cfb25e7dd09a` — sha256 of `LIGHT_TOKEN_NAMES.join('\n')`, first 12 hex (was `9529c7a66ab1` at 1.5.1–1.6.0, `0f646c594950` at 1.4.1). See [Staleness](#staleness--how-to-re-derive) |
 | Type-surface fingerprint | **not re-derived.** The 1.4.1 value `0e940b45aeac` came from a method this skill never recorded, and could not be reproduced from the published `dist/*.d.ts` by any obvious hash, so it is dropped rather than guessed. The type surface did change: `PresetConfig.overrides`, `PresetSpec.overrides`, the `Tuning` type and `SerializeOptions.alwaysLight` are new |
 | Source | <https://github.com/thinktalentservice-ai/starterkit-theme> |
 | npm | <https://www.npmjs.com/package/@devopsnext/starterkit-theme> |
 
 **How much to trust each section:** the suffix table, token inventory, entry-point map, preset values
-and MUI mapping are derived from the **published 1.6.0 tarball** — `dist/*.d.ts`, `dist/mui.js`,
+and MUI mapping are derived from the **published 1.7.0 tarball** — `dist/*.d.ts`, `dist/mui.js`,
 `presets/*.css`, `schema.json` — and from `src/presets/{base,tuning,think,elemetrik}.ts` /
 `src/engine/ladder.ts` in the source repo. Authoritative. *Choosing*, *Anti-patterns* and *Red flags*
-are judgement. If the installed version has moved past 1.6.0, see
+are judgement. If the installed version has moved past 1.7.0, see
 [Staleness](#staleness--how-to-re-derive) before trusting a table.
 
 `TOKENS_VERSION` is the package's own content hash **over the token NAME set** — it moves when the
-contract changes, not on every rebuild. If it differs from `9451b3ea404a`, a token was added, renamed
+contract changes, not on every rebuild. If it differs from `ddc9022b81f7`, a token was added, renamed
 or deleted. **If it matches, that proves much less than it used to:** 1.4.1 → 1.5.1 left the hash and
 both counts untouched while changing almost every colour *value*, nine light-block memberships, the
 light radii and the scheme behaviour of several fills. The hash is a names-only signal; values need a
 sheet diff.
+
+### What changed in 1.7.0
+
+The sidebar rail is now **dark in both schemes**.
+
+- **Five new tokens**, the rail's own ink, identical in both schemes (so absent from the light block):
+  `--sidebar-fg1` `--sidebar-fg2` (both `#ffffff`), `--sidebar-fg-muted`
+  (`rgb(255 255 255 / 0.6)`), `--sidebar-border` (`rgb(255 255 255 / 0.12)`),
+  `--sidebar-hover-overlay` (`rgb(255 255 255 / 0.08)`).
+- **`--sidebar-bg` is `#0d0f1a` in dark and light** (was `#09091a` dark / `#ffffff` light) and left the
+  light block. The engine sets it too, so custom brands get the dark rail.
+- **Anything painted on `--sidebar-bg` must use the `--sidebar-*` ink.** `--fg1`, `--fg2`, `--border`
+  and `--hover-overlay` are dark ink in light, so they are unreadable on the rail.
+- **Two new `report` duties:** `--sidebar-fg1` and `--sidebar-fg2` at 4.5:1 on `--sidebar-bg`, both
+  schemes. A brand that wants a light rail overrides `--sidebar-bg` **and** the ink together;
+  overriding only the background lands in `warnings`.
+- **MUI:** the `MuiDrawer` paper now sets `color: var(--sidebar-fg1)`. A child that sets
+  `text.secondary` explicitly (`ListItemText` secondary) still needs its own override.
+- Pair it with `@devopsnext/starterkit-layout` 1.7.0, which reads these tokens on its rail.
 
 ### What changed in 1.6.0
 
@@ -107,14 +126,14 @@ see the history.)
 pnpm add @devopsnext/starterkit-theme@<version-from-step-1>
 ```
 
-At the time this file was written step 1 answered `1.6.0`, so step 2 was:
+At the time this file was written step 1 answered `1.7.0`, so step 2 was:
 
 ```bash
-pnpm add @devopsnext/starterkit-theme@1.6.0
+pnpm add @devopsnext/starterkit-theme@1.7.0
 ```
 
-`package.json` must end up holding the bare number — `"@devopsnext/starterkit-theme": "1.6.0"`.
-**Open it and check.** If your client widened it to `"^1.6.0"`, re-add with `--save-exact`
+`package.json` must end up holding the bare number — `"@devopsnext/starterkit-theme": "1.7.0"`.
+**Open it and check.** If your client widened it to `"^1.7.0"`, re-add with `--save-exact`
 (npm/pnpm) or `--exact` (yarn).
 
 **Why not just `@latest`.** It installs the same code, but every client writes a **caret** range
@@ -145,9 +164,10 @@ correction for the card package, `box-sizing` on `*`, a `body` background/colour
 `.modal-title { font-size: 15px }` for Bootstrap modals. READMEs through 1.5.1 called it "Think's
 static token sheet" — that was wrong; the 1.6.0 README calls it brand-independent structural CSS,
 which matches the file. (`bootstrap-bridge.css` and `schema.json` are identical from 1.4.1 through
-1.6.0; `styles.css` was identical from 1.4.1 to 1.5.1 and changed only in typography at 1.6.0.)
+1.7.0; `styles.css` was identical from 1.4.1 to 1.5.1, changed only in typography at 1.6.0, and is
+identical again at 1.7.0.)
 A preset sheet (`presets/<id>.css`) or an SSR-injected brand block is the token source; `styles.css`
-alone gives you 205 `var()`s resolving to nothing.
+alone gives you 210 `var()`s resolving to nothing.
 
 Both imports belong **once, at the app root** — the root layout, `_app`, or your entry module. Never
 from a component. See [references/wiring.md](references/wiring.md) for the full import order and the
@@ -223,7 +243,8 @@ What it changed, as it shows up in the shipped sheets:
   on near-black) and aubergine on elemetrik (`#1f1442`, lifted to `#3a2c6e`) — no longer slate `#64748b`.
 - **Accent** is the logo lime `#b3d335` flat on think (solid and mark the same in both schemes) and a
   pink fill `#d42a68` on elemetrik.
-- **Light scheme** is one white plane (`--background` `--surface` `--card` all `#ffffff`), tighter radii
+- **Light scheme** is one white content plane (`--background` `--surface` `--card` all `#ffffff`; the
+  sidebar rail stays dark from 1.7.0), tighter radii
   (`--radius` 8px, `--radius-chip` 6px, `--radius-card` 12px), hairline shadows, and **no coloured
   glows or button shadows (`none`)**.
 - **Known, shipped duty misses** — `resolveBrand` returns 4 warnings on think and 3 on elemetrik, all
@@ -244,7 +265,7 @@ a near-black surface text must be *lighter* than the mark and on white it must b
 
 ## The rest of the token set
 
-Full 205-name inventory, grouped, with both presets' resolved values, is in
+Full 210-name inventory, grouped, with both presets' resolved values, is in
 [references/tokens.md](references/tokens.md). The shape of it:
 
 | Group | Tokens |
@@ -255,6 +276,7 @@ Full 205-name inventory, grouped, with both presets' resolved values, is in
 | Buttons (bare) | `--btn-outline-border{,-hover}` `--btn-ghost-bg{,-hover}` |
 | Focus | `--ring` — the primary **mark** of each scheme at alpha 0.4 (think `rgb(58 160 255 / 0.4)` dark, `rgb(0 138 255 / 0.4)` light; elemetrik `#8a63ff` / `#6835ff` hues). Through 1.4.1 it was the seed at 0.40 dark / 0.30 light |
 | Chrome | `--topbar-bg` |
+| Sidebar rail ink (1.7.0) | `--sidebar-fg1` `--sidebar-fg2` `--sidebar-fg-muted` `--sidebar-border` `--sidebar-hover-overlay` — the ink for a surface painted `--sidebar-bg`; same value in both schemes |
 | Depth (neutral) | `--shadow-card` `--shadow-card-hover` `--shadow-elevated` `--shadow-dropdown` — **not** scaled by `intensity`; they are depth cues, not brand. Hairline + faint drop in light (1.5.0) |
 | Radii | `--radius` `--radius-chip` `--radius-card` `--radius-pill` — **scheme-dependent**: 12 / 16 / 20px in dark, **8 / 6 / 12px in light** (pill is `9999px` in both). `PresetConfig.radius` moves the dark values only |
 | Type / motion | `--font-heading` and `--font-body` — **both `'Poppins', system-ui, sans-serif`** in the shipped presets (1.5.1; Plus Jakarta Sans through 1.5.0); `--font-mono` (`'Geist Mono', ui-monospace, monospace`); `--ease-entrance` |
@@ -295,12 +317,12 @@ selects the element the custom properties are declared on.
 
 Theme-package specifics:
 
-- A preset sheet is exactly two blocks: `:root { …all 205 tokens, plus --tokens-version and
-  --tokens-brand… }` then `[data-mui-color-scheme="light"] { …the 100 names in LIGHT_TOKEN_NAMES;
+- A preset sheet is exactly two blocks: `:root { …all 210 tokens, plus --tokens-version and
+  --tokens-brand… }` then `[data-mui-color-scheme="light"] { …the 99 names in LIGHT_TOKEN_NAMES;
   color-scheme: light }`. **By default only differences go in the light block** — a light rule
   restating a token at equal specificity would beat a later `:root` brand override, so a tenant colour
   would apply in dark and silently not in light. **The shipped sheets are the deliberate exception (1.5.1):**
-  both declare the same 100 names (`serializeBrandCss`'s `alwaysLight`), so a few entries equal their dark
+  both declare the same 99 names (`serializeBrandCss`'s `alwaysLight`), so a few entries equal their dark
   value (think's `--accent` and `--accent-channel`; elemetrik's `--primary-solid` and
   `--primary-solid-hover`). The set of names is fixed; the values per scheme are not all different.
 - `serializeBrandCss` emits `['[data-mui-color-scheme="light"]']` by default. `[data-theme="light"]`
@@ -338,7 +360,7 @@ the Bootstrap bridge — is in [references/wiring.md](references/wiring.md).
 
 ## The two presets
 
-Both emitted sheets have a **byte-identical custom-property name list in the same order** (207
+Both emitted sheets have a **byte-identical custom-property name list in the same order** (212
 declarations each). They differ in 32 `:root` values (plus `--tokens-brand`) and 20 light-block values:
 the `primary`, `secondary` and `accent` families, `--ring`, `--shadow-card-hover`, those families' glows
 and button shadows, and the avatar stops/inks. The seeds below are what the engine is given; the
@@ -488,6 +510,7 @@ onto the other. Do not assume a brand document can be fed straight to `makePrese
 | Expecting `makePreset({ radius })`, an `info` seed or light surfaces to take effect in a custom brand | The shared tuning layer pins light radii (8/6/12), `info`, and several fills; only the dark radii follow `radius` | pass `overrides`, see [wiring](references/wiring.md#custom-brands) |
 | Treating a matching `TOKENS_VERSION` as "nothing changed" | It hashes names only; 1.4.1 → 1.5.1 kept it while values and light-block membership moved | diff the sheets and the light-name fingerprint |
 | A gradient without its `-ink` | The ink is what makes the gradient legible | pair them |
+| `--fg1` / `--fg2` / `--border` on a `--sidebar-bg` surface | Dark ink in light, on a rail that is dark in both schemes (1.7.0) | `--sidebar-fg1` / `--sidebar-fg2` / `--sidebar-border` |
 | `--fg1` on `--{f}-solid` | `-bg` is the tint that takes `--fg1`; `-solid` takes `-on-solid` | match the pair |
 | Lowering a duty `min` so a seed passes | The duty is the contract | change the seed, or acknowledge with the measured number |
 | `--status-review` and `--warning` interchangeably | Same amber today, different meanings | keep them separate |
@@ -503,14 +526,17 @@ onto the other. Do not assume a brand document can be fed straight to `makePrese
 
 ## Red flags — stop
 
-- About to run `pnpm add …@latest`, `@^1`, `@~1.6` or a bare `pnpm add <pkg>` → all of them record a
+- About to run `pnpm add …@latest`, `@^1`, `@~1.7` or a bare `pnpm add <pkg>` → all of them record a
   **range**. Look up the latest version, then install that literal number.
-- `package.json` shows `"^1.6.0"` rather than `"1.6.0"` → re-add with `--save-exact`.
+- `package.json` shows `"^1.7.0"` rather than `"1.7.0"` → re-add with `--save-exact`.
 - About to install the version this file names without re-checking the registry → check first; the
-  latest may have moved past 1.6.0.
+  latest may have moved past 1.7.0.
 - Bumping from ≤1.5.1 and an MUI screen suddenly reads smaller and lighter → that is 1.6.0's
   typography (body1 13px, fields 12px, headings 600), not a broken font load. Do not "fix" it with
   `sx` sizes; if a product needs the old scale, override `typography` once in `createTheme(base, …)`.
+- Bumping from ≤1.6.0 and light-mode sidebar text vanishes → it is painted `--fg1`/`--fg2` on the now
+  dark `--sidebar-bg`. Use `--sidebar-fg1`/`--sidebar-fg2`, and delete host overrides that darkened
+  the rail by hand.
 - About to write a hex literal anywhere in app CSS, `sx` or an inline style → pick a token by job.
 - About to use `--{f}-border` for a border that means something → use `--{f}`.
 - About to hardcode a label colour over a brand fill → `--{f}-on-solid`.
@@ -531,7 +557,7 @@ onto the other. Do not assume a brand document can be fed straight to `makePrese
 
 ## Staleness — how to re-derive
 
-This file documents 1.6.0. Nothing enforces that; check it. Compare three numbers — what the registry
+This file documents 1.7.0. Nothing enforces that; check it. Compare three numbers — what the registry
 publishes, what `package.json` pins, and what is actually installed:
 
 ```bash
@@ -551,11 +577,11 @@ the name set, and 1.4.1 → 1.5.1 moved almost every *value* while the name set 
 node -p "const t=require('@devopsnext/starterkit-theme'); [t.TOKENS_VERSION, t.ROOT_TOKEN_NAMES.length, t.LIGHT_TOKEN_NAMES.length].join(' ')"
 ```
 
-Expected: `9451b3ea404a 205 100` (verified against the published 1.6.0 tarball; identical to 1.4.1 and 1.5.1).
+Expected: `ddc9022b81f7 210 99` (verified against the published 1.7.0 tarball).
 If any of them differs, the **name set** moved. If all three hold, **the names still stand — the values
 may not.** That hash is taken over the token **name** set only, and the 1.4.1 → 1.5.1 window proved it:
 same three numbers, different light-block membership (9 names in, 9 out) and a re-tuned palette. So also
-fingerprint the light-block names (expected `9529c7a66ab1` at 1.5.1 and 1.6.0):
+fingerprint the light-block names (expected `cfb25e7dd09a` at 1.7.0):
 
 ```bash
 node -p "const t=require('@devopsnext/starterkit-theme'); require('crypto').createHash('sha256').update(t.LIGHT_TOKEN_NAMES.join('\n')).digest('hex').slice(0,12)"
@@ -585,7 +611,7 @@ If any of them moved, re-derive **before** trusting a table, in this order:
    [r.getPropertyValue("--tokens-brand"), r.getPropertyValue("--tokens-version")];
    ```
    `serializeBrandCss` emits those two **only** when called with `provenance`; the shipped `presets/*.css`
-   sheets already carry both as literals (`--tokens-version: "9451b3ea404a"`, `--tokens-brand: "think"`
+   sheets already carry both as literals (`--tokens-version: "ddc9022b81f7"`, `--tokens-brand: "think"`
    or `"elemetrik"`), so a preset-sheet app reads them without any extra step.
 7. If token names changed, re-check `bootstrap-bridge.css` and any app stylesheet for names that no
    longer exist — that is where the silent `var()` failure lands. This bridge was silently broken once
