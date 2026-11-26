@@ -115,5 +115,7 @@ probe.style.backgroundColor = 'var(--surface)';
 document.body.appendChild(probe);
 const surface = getComputedStyle(probe).backgroundColor; probe.remove();
 getComputedStyle(document.querySelector('.sun-editor')).backgroundColor === surface;
-// .sun-editor-editable is TRANSPARENT over the shell — compare its `color`, not its background.
+// The writing area: compare its `color` with your text token. Its background comes from
+// `suneditor/css/contents` (`--se-edit-background-color`), and its inset must not be 0px:
+getComputedStyle(document.querySelector('.sun-editor-editable')).paddingLeft; // '0px' → css/contents missing
 ```
