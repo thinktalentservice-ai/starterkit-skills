@@ -8,6 +8,7 @@ Copy it, then change the option values — not the mount mechanics.
 import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import 'suneditor/css/editor';            // NOT suneditor/dist/css/suneditor.min.css
+import 'suneditor/css/contents';          // padding + content rules of the writing area
 // import 'suneditor/src/themes/dark.css'; // only if you use `theme: 'dark'`
 
 /** Exactly the plugins the toolbar uses. See SKILL.md "Plugins". */
@@ -105,6 +106,7 @@ RichTextEditor.propTypes = {
 | Line | Without it |
 |---|---|
 | `import('suneditor')` inside the effect | A static import runs on the server during SSR; suneditor touches `document` at create time. It also puts ~300 KB in every route that renders the editor. |
+| `import 'suneditor/css/contents'` | Typed text sits flush against the border (the placeholder is still indented), and lists, tables and quotes are unstyled while editing. |
 | `cancelled` flag | StrictMode mounts → unmounts → mounts. Without the flag the first, already-cleaned-up run still creates an editor: two toolbars, one orphaned carrier on `<body>`. |
 | imperative `<textarea>` inside an empty div | Rendering `<textarea ref>` in JSX lets React own a node suneditor hides and inserts siblings next to. Any re-render that touches that subtree can throw `NotFoundError: Failed to execute 'removeChild'`. |
 | `onChangeRef` | `events.onChange` is captured at create. A plain `onChange` prop goes stale after the first render — state setters keep working, closures over props do not. |
