@@ -2,7 +2,7 @@
 name: suneditor-v3
 description: Use when adding, upgrading, configuring, theming or debugging the SunEditor rich-text (WYSIWYG) editor at v3 (`suneditor` 3.x) in a React or Next.js app — migrating from suneditor 2.x or the `suneditor-react` wrapper, translating v2 options such as `setOptions`, `attributesWhitelist`, `imageFileInput`, `videoIframeAttrs`, `resizingBar`, `defaultStyle`, `linkProtocol` or `popupDisplay`, choosing `buttonList` names or `plugins`, or diagnosing "getContents is not a function", `Cannot find module 'suneditor/dist/css/suneditor.min.css'`, `[SUNEDITOR.plugins.exportPDF.error]` / math / template / layout console warnings, a white editor on a dark theme, `.se-dialog` styles that stopped applying, a caret that jumps to the top on every keystroke, two toolbars in dev, or an image/video/link modal whose URL field will not take typing inside an MUI Dialog.
 license: MIT
-compatibility: Verified against suneditor 3.4.1 with Next.js 16 / React 19 (App Router, StrictMode). The option table also covers 3.4.x docs.
+compatibility: Checked against suneditor 3.4.3 source. The React mount was browser-tested on 3.4.1 with Next.js 16 / React 19 (App Router, StrictMode). The option table also covers 3.4.x docs.
 metadata:
   author: thinktalentservice-ai
   version: "1.0"
@@ -17,7 +17,8 @@ silently**: an unknown option is ignored, a misspelt whitelist allows nothing
 (or everything), and a mis-scoped theme leaves only the modals white.
 
 **Core principle:** trust the shipped source over memory. Every claim below was
-checked in `node_modules/suneditor/src` (3.4.1). When something here disagrees
+checked in `node_modules/suneditor/src` (3.4.1, re-diffed against 3.4.3, npm
+`latest` on 2026-11-26). When something here disagrees
 with what you remember about v2, this file wins; when it disagrees with the
 installed version's source, the source wins — grep `src/core/schema/options.js`.
 
@@ -47,8 +48,12 @@ installed version's source, the source wins — grep `src/core/schema/options.js
 **Install & import**
 
 ```bash
-pnpm add suneditor@^3.4.1 && pnpm remove suneditor-react
+pnpm add suneditor@^3.4.3 && pnpm remove suneditor-react
 ```
+
+Do not go below **3.4.3**: earlier 3.x lets a code block's language inject HTML
+into the language button and menu
+([GHSA-j4jp-7r3h-rf28](https://github.com/JiHong88/suneditor/security/advisories/GHSA-j4jp-7r3h-rf28)).
 
 ```js
 import 'suneditor/css/editor';                 // editor chrome
@@ -103,6 +108,17 @@ only — remount to change them.
 `removeFormat`, `outdent`, `indent`, `align`, `list`, `lineHeight`, `table`,
 `link`, `image`, `video`, `audio`, `fullScreen`, `showBlocks`, `codeView`,
 `undo`, `redo`, `preview`, `print`, `fontSize`.
+
+## Changed from 3.4.1 to 3.4.3
+
+| Change | What to do |
+|---|---|
+| A `language-` class is kept only if the language name is letters, digits, `_ + # . -` | Check saved HTML that uses other class names such as `language-foo/bar` |
+| A custom `iframe_attributes.sandbox` (iframe mode) is kept as given; only `allow-same-origin` is added. 3.4.1 also forced `allow-scripts` | Include `allow-scripts` yourself. Without it Safari and iOS do not work (console error on Safari) |
+| The primary button ink is `--se-btn-primary-color`, no longer a hard-coded `#fff`; `--se-active-font-color` is new | Map both ([references/theming.md](references/theming.md)); drop `.se-btn-primary { color }` overrides |
+| Built-in `dark` theme hover and active colours were re-tuned | Re-check screenshot baselines |
+| Editing image/video/audio without a new file or URL no longer re-submits the source | `on{Image,Video,Audio}UploadBefore` fires only when the source is replaced |
+| `image.createUrlInput: false` now works without setting `createFileInput`; audio edit modal no longer throws | Delete workarounds |
 
 ## Plugins
 

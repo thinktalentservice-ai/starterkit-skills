@@ -1,6 +1,6 @@
 # Mounting SunEditor v3 in React / Next.js without a wrapper package
 
-A complete, tested component (Next.js 16, React 19, StrictMode, App Router).
+A complete component, tested on suneditor 3.4.1 (Next.js 16, React 19, StrictMode, App Router).
 Copy it, then change the option values — not the mount mechanics.
 
 ```jsx

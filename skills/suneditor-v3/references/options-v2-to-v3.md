@@ -10,6 +10,8 @@ with removed keys commented out. Run it on the real options before hand-editing.
 
 ## Corrections and gaps verified in `suneditor@3.4.1` source
 
+Re-diffed against 3.4.3: in `src/core/schema/options.js` only the `language-` class pattern changed.
+
 The table is the docs site's view. These rows were checked against
 `node_modules/suneditor/src/core/schema/options.js` and differ or need a note:
 
