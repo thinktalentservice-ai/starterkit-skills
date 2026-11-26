@@ -64,14 +64,11 @@ handle the second.
 
 ## The help menu — replay + auto-start switch
 
-The package ships `IntroHelpButton` (one icon button) and `IntroAutoStartSwitch`. In an app with an
-existing header-menu design, build the menu from `useIntro()` instead so it matches:
-
-```jsx
-const { hasIntro, start, autoStartEnabled, setAutoStartEnabled } = useIntro();
-```
-
-Three rules learned the hard way:
+Copy [../assets/HelpDD.jsx](../assets/HelpDD.jsx) (reactstrap header) or
+[../assets/HelpMenu.jsx](../assets/HelpMenu.jsx) (any other header); SKILL.md, "The help menu", says
+which and how to mount it. Do not use the package's `IntroHelpButton` / `IntroAutoStartSwitch` in a
+header. The bundled files already follow these three rules; keep them true if you port one to
+TypeScript:
 
 1. **Disable "Take a tour" when `!hasIntro`** and say why ("No intro for this page yet") — the menu
    is global, most apps will not have a file for every route.

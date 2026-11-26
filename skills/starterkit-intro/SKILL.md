@@ -1,11 +1,11 @@
 ---
 name: starterkit-intro
-description: Use when adding, wiring, writing, reviewing or debugging a per-page guided intro, product tour, onboarding walkthrough, coach marks or "Take a tour" help button in a React or Next.js app that uses @devopsnext/starterkit-intro — installing or pinning the package, mounting IntroProvider with a router's pathname and basePath, tagging elements with data-intro, writing or generating public/intro/<route>.json, running the starterkit-intro capture/list CLI, adding a lint:intro gate so a renamed tag fails CI, putting replay and an auto-start switch in a header menu, or diagnosing a tour that never starts, a step that is silently skipped, edited copy users never see, a one-line highlight strip, focus landing on body after the tour, a capture that reports "redirected to /login", or a CI failure on a file:*.tgz pin.
+description: Use when adding, wiring, writing, reviewing or debugging a per-page guided intro, product tour, onboarding walkthrough, coach marks or "Take a tour" help button in a React or Next.js app that uses @devopsnext/starterkit-intro — installing or pinning the package, mounting IntroProvider with a router's pathname and basePath, tagging elements with data-intro, writing or generating public/intro/<route>.json, running the starterkit-intro capture/list CLI, adding a lint:intro gate so a renamed tag fails CI, putting replay and an auto-start switch in a header menu (the HELP panel behind the ? button), or diagnosing a tour that never starts, a step that is silently skipped, edited copy users never see, a one-line highlight strip, focus landing on body after the tour, a "Show intro on new pages" switch that does nothing, a capture that reports "redirected to /login", or a CI failure on a file:*.tgz pin.
 license: MIT
 compatibility: React 18+ consumer, any router (Next.js App/Pages Router, React Router, plain React). Peers are react and react-dom only — no MUI, no Next. The capture command needs Playwright in the host project and the app running. Commands are shown for pnpm; npm and yarn work the same way.
 metadata:
   author: thinktalentservice-ai
-  version: "1.0"
+  version: "1.1"
 ---
 
 # starterkit-intro
@@ -29,7 +29,7 @@ thing a project needs after wiring is the static gate this skill ships (`lint:in
 
 The package's own `README.md` (in `node_modules/@devopsnext/starterkit-intro/`) is the API and
 schema reference. This skill does **not** repeat it; it covers what the README cannot: the gate,
-the setup, tagging that survives real components, the header-menu pattern, and diagnosis.
+the setup, tagging that survives real components, the one help-menu design (bundled), and diagnosis.
 
 ## Install — exact pin, never `link:`
 
@@ -69,6 +69,50 @@ Full snippets (Next App Router, Pages Router, React Router, header menu): [refer
 - File for a route = the package's `routeToIntroPath`: `/` → `intro/index.json`,
   `/settings/profile/` → `intro/settings/profile.json`. The file's `"route"` must match.
 - Mount it only around pages that should have intros (a dashboard shell, not login/callback pages).
+
+## The help menu — one design, always
+
+Every app wired with this skill gets the same header control: a **?** button opening a **HELP** panel
+with two rows. This is part of wiring, not an extra: do it even when the request only says "add an
+intro" or "add a tour". Live reference: <https://nextv3.thinktalent.info/starterkit-user/design/>
+(open the **?** in the header).
+
+| Row | Icon | Title | Line under it | Right side |
+|---|---|---|---|---|
+| 1 | compass, blue tile | Take a tour of this page | A short walk-through of what is here — or, disabled, No intro for this page yet | — |
+| 2 | sparkles, violet tile | Show intro on new pages | On — first visit to a page starts its intro — or Off — use this menu to start one | on/off switch |
+
+**Copy the bundled component; never redraw it.** Both need `lucide-react`.
+
+| Host header | Copy | Mount |
+|---|---|---|
+| `@devopsnext/starterkit-layout` (reactstrap dropdowns) | [assets/HelpDD.jsx](assets/HelpDD.jsx) → beside the other header panels (`layouts/header/`) | `headerDropdowns={[{ id: "help", icon: <CircleHelp size={17} />, label: "Help", content: <HelpDD /> }]}` — `label` is the HELP heading |
+| another reactstrap header | `HelpDD.jsx` | the content of an `UncontrolledDropdown` whose menu starts with `<DropdownItem header>Help</DropdownItem>`, menu width 300px |
+| anything else (MUI, Tailwind, plain React, Vite) | [assets/HelpMenu.jsx](assets/HelpMenu.jsx) | `<HelpMenu />` in the header; `align="end"` if it sits at the right edge. Do not add reactstrap for this |
+
+- **Leave `autoStart` at its default (`true`).** `autoStart={false}` on the provider overrides the
+  user's setting: the switch reads "On" and no tour ever starts.
+- **Replace what is there.** An existing `IntroHelpButton`, `IntroAutoStartSwitch` or one-row
+  "Show this page's intro" menu is swapped for this panel.
+- **Automated tests now meet an open tour** that swallows clicks. Switch it off in the tests, not in
+  the app, with an init script that runs before every navigation (use your `storageKey` if you set one):
+
+  ```js
+  await page.addInitScript(() =>
+    localStorage.setItem("starterkit-intro", JSON.stringify({ v: 1, autoStart: false, seen: {} })));
+  ```
+
+- The only edits allowed in the copied file are import paths, TypeScript types and translating the
+  strings through the host's i18n. Theme it with the `--dd-*` tokens: `starterkit-theme` presets
+  define them, the file has light fallbacks, and a host with its own dark theme sets them there.
+- **No theme tokens in the host?** The panel falls back to light, but the package's tour popover falls back
+  to **dark**. In a light app set `--surface-elevated`, `--fg1`, `--fg2`, `--border` and
+  `--hover-overlay` on `:root` (the package README lists every token it reads).
+- A different design only when the user asks for one. A full-screen surface with no page header
+  (kiosk, game, embedded desktop) is not a header: ask before putting a control on it.
+
+**Wiring is done when** the open panel in a browser shows the heading, both rows and a switch that
+flips and leaves the panel open.
 
 ## Tagging — the attribute has to reach a real, meaningful element
 
@@ -152,7 +196,8 @@ added in JSX with the step ids in the file.
 |---|---|
 | No tour, no warning | No file at `baseUrl/<routeToIntroPath>` (404 = no intro). Check the Network tab URL; usual culprit is `baseUrl` missing `basePath`. |
 | `[starterkit-intro] ignoring …` in console | Schema error or `route` mismatch — run `lint:intro`. |
-| Tour never auto-starts | Already seen at this `revision`, user switched auto-start off (`localStorage["starterkit-intro"]`), or every step is draft. |
+| Switch says "On" but no tour ever starts by itself | `autoStart={false}` on `IntroProvider` — remove it. |
+| Tour never auto-starts | `autoStart={false}` on the provider, already seen at this `revision`, user switched auto-start off (`localStorage["starterkit-intro"]`), or every step is draft. |
 | Step silently skipped | Target missing, zero-size, `display:none` or inside a closed menu/tab. Component not forwarding props is the common one. |
 | Highlight is a thin strip | Tag landed on a caption — tag the section root (`...rest`). |
 | Edited copy never shown | `revision` not bumped. |
@@ -164,6 +209,8 @@ added in JSX with the step ids in the file.
 
 ## Red flags — stop
 
+- About to ship a bare `?` button, `IntroHelpButton`, or a one-line menu item → copy the bundled panel.
+- About to pass `autoStart={false}` (for tests, or because the tour "gets in the way") → leave it on; switch it off in the tests.
 - About to add a wrapper `<div data-intro>` → make the component forward `...rest`.
 - About to tag a caption because the section component swallows props → same.
 - About to hand-write `public/intro/*.json` from scratch for many pages → `intro:capture`, then edit.
