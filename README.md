@@ -61,7 +61,7 @@ frontmatter `description` lists the full set of triggers and symptoms.
 | Skill | Written against | Use it for |
 |---|---|---|
 | [`starterkit-config-util`](skills/starterkit-config-util/SKILL.md) | `starterkit-config-util` 0.4.1 | Runtime config, `env.json`, per-host service URLs, third-party integrations, health checks and CSP gates. |
-| [`starterkit-intro`](skills/starterkit-intro/SKILL.md) | `starterkit-intro` 0.1.1 | Per-page product tours and "Take a tour" buttons, with a CI gate for renamed tags. |
+| [`starterkit-intro`](skills/starterkit-intro/SKILL.md) | `starterkit-intro` 0.1.1 | Per-page product tours with one bundled HELP panel ("Take a tour" + auto-start switch), and a CI gate for renamed tags. |
 
 All packages above are published under the `@devopsnext/` npm scope.
 
@@ -131,6 +131,7 @@ skills/
   <skill-name>/
     SKILL.md            # required: YAML frontmatter + body
     references/         # optional: loaded on demand, keeps SKILL.md small
+    assets/             # optional: files the agent copies into your project
     scripts/            # optional: executable helpers
 ```
 
