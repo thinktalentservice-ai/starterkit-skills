@@ -1,7 +1,7 @@
 # Wiring the shell — the full recipe
 
 Loaded on demand from [../SKILL.md](../SKILL.md). Everything here is derived from
-`@devopsnext/starterkit-layout@1.6.0` and from the reference wiring in
+`@devopsnext/starterkit-layout@1.7.0` and from the reference wiring in
 `template-starterkit-nextjs` — the only app known to be on the current version.
 
 ## 1. The stylesheet, once, at the app root
@@ -33,8 +33,8 @@ Two prerequisites the package cannot import for you:
 - **Bootstrap 5.3 utility CSS.** Without it the shell is a broken vertical stack and nothing throws.
 - **`simplebar-react/dist/simplebar.min.css`**, above.
 
-Fonts are yours too. The type tokens name families and fall back to `system-ui`; load Outfit and
-Plus Jakarta Sans with `next/font` (self-hosted, CSP-safe).
+Fonts are yours too. The type tokens name families and fall back to `system-ui`; load Poppins (the
+fallback face since 1.7.0) with `next/font` (self-hosted, CSP-safe).
 
 ## 2. One adapter file, and only one
 
@@ -342,7 +342,7 @@ pnpm build && pnpm pack
 ```
 
 ```bash
-pnpm add ./../starterkit-layout/devopsnext-starterkit-layout-1.6.0.tgz
+pnpm add ./../starterkit-layout/devopsnext-starterkit-layout-1.7.0.tgz
 ```
 
 A linked package resolves react from its own directory, and React identity is per module instance —
