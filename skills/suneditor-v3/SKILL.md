@@ -5,7 +5,7 @@ license: MIT
 compatibility: Checked against suneditor 3.4.3 source. The React mount was browser-tested on 3.4.1 with Next.js 16 / React 19 (App Router, StrictMode). The option table also covers 3.4.x docs.
 metadata:
   author: thinktalentservice-ai
-  version: "1.0"
+  version: "1.1"
 ---
 
 # suneditor-v3
@@ -26,7 +26,8 @@ installed version's source, the source wins — grep `src/core/schema/options.js
 
 | Symptom | Cause | Counter |
 |---|---|---|
-| `Cannot find module 'suneditor/dist/css/suneditor.min.css'` (or `dist/suneditor.min.css`) | v3's `exports` map only exposes `suneditor/css/editor` and `suneditor/css/contents`. | `import 'suneditor/css/editor'` |
+| `Cannot find module 'suneditor/dist/css/suneditor.min.css'` (or `dist/suneditor.min.css`) | v3's `exports` map only exposes `suneditor/css/editor` and `suneditor/css/contents`. | `import 'suneditor/css/editor'` and `import 'suneditor/css/contents'` |
+| Typed text touches the editor's left border; the placeholder is indented but the text is not; lists, tables and quotes look unstyled while editing | Only `suneditor/css/editor` imported. The writing area's `.sun-editor-editable { padding: var(--se-edit-inner-padding) }` and content rules ship in `suneditor/css/contents`. | import **both** beside the editor; change the inset with `--se-edit-inner-padding`, not a `padding` override |
 | Editor renders, every toolbar dropdown/modal button does nothing | No `plugins` passed — v3 plugins are opt-in. | pass `plugins` (see Plugins) |
 | `[SUNEDITOR.plugins.exportPDF.error]`, math/template/layout/fileUpload warnings on every mount; a stray gallery request | Whole `plugins` export passed. | pass only the toolbar's plugins |
 | `suneditor-react` installed, nothing works / v2 errors | `suneditor-react` 3.x drives the **v2** API. | remove it; mount directly (references/react-mount.md) |
@@ -57,7 +58,7 @@ into the language button and menu
 
 ```js
 import 'suneditor/css/editor';                 // editor chrome
-import 'suneditor/css/contents';               // only where you RENDER saved HTML (.sun-editor-editable)
+import 'suneditor/css/contents';               // REQUIRED with the editor too, and where you render saved HTML
 const { default: suneditor, plugins } = await import('suneditor'); // inside useEffect
 import ko from 'suneditor/langs/ko';           // optional; default is English
 ```
@@ -136,7 +137,8 @@ Mount directly; do not add a wrapper dependency to save forty lines. The full
 tested component, with the reason for every line, is in
 **references/react-mount.md**. Non-negotiables:
 
-1. `'use client'` + `import('suneditor')` inside `useEffect` (no SSR, lazy chunk).
+1. `'use client'` + `import('suneditor')` inside `useEffect` (no SSR, lazy chunk);
+   import **both** `suneditor/css/editor` and `suneditor/css/contents`.
 2. Target `<textarea>` created imperatively inside an empty React-owned `<div>`.
 3. `cancelled` guard for StrictMode; `editor.destroy()` in cleanup.
 4. `onChange` through a ref; content is a **seed**, reset by remounting with `key`.
@@ -167,6 +169,7 @@ stripped by v3's filter; that is not a substitute.
    <https://suneditor.com/migration> (client-rendered — needs a real browser)
    and diff against what you wrote.
 3. In a browser: toolbar renders every expected `button[data-command]`;
-   typing reaches your `onChange`; no `[SUNEDITOR` console messages; open the
+   typing reaches your `onChange`; typed text is inset from the border (computed
+   `padding-left` of `.sun-editor-editable` is not `0px`); no `[SUNEDITOR` console messages; open the
    image modal **inside every modal/dialog host** and type a URL; check
    `.sun-editor` background equals your surface token in light **and** dark.
