@@ -1,0 +1,112 @@
+---
+name: dev-debug
+description: Launch the System Owner app ({{APP_URL}}) in a HEADED browser (visible window) via playwright-cli for development and debugging, reusing a saved login session (auto-login via login.ps1 with DEBUG_* creds from .env.debug.local when expired; never ask the user). Always `playwright-cli open --headed` - never Playwright MCP, the built-in browser pane, or a headless session, because the user must watch the browser. Use when the user wants to see the app in a real browser, debug UI, reproduce a bug live, or check a change in the running dev app. Trigger on "/dev-debug", "open the app", "debug in browser", "show me the app headed", "launch app and login".
+allowed-tools: Bash(playwright-cli:*) Bash(npx:*) Bash(curl:*)
+---
+
+# Dev Debug — headed browser + saved login
+
+Launch the running dev app in a **visible** browser window with a logged-in session, so you (and the user) can watch the UI while debugging.
+
+## Headed rule (non-negotiable)
+
+The user must SEE the browser. So:
+
+- Drive it with `playwright-cli` only. Not Playwright MCP (`mcp__plugin_playwright_*`), not the built-in browser pane (`mcp__Claude_Browser__*`), not Claude in Chrome - none of those give the user a window they can watch alongside your commands.
+- Every `open` carries `--headed`. No exceptions, including re-opens and `state-load` runs.
+- Verify after every `open`: `playwright-cli list` must show `headed: true` under the `dev` session. `headed: false` → re-run `playwright-cli -s=dev open --headed <url>`; it relaunches the same session as a visible window.
+
+## Config
+
+| Key | Value |
+|-----|-------|
+| App URL | `{{APP_URL}}` |
+| Landing page after login | `{{LANDING_URL}}` |
+| Session name | `dev` |
+| Creds | `DEBUG_USERNAME`, `DEBUG_PASSWORD` in `.env.debug.local` ({{CREDS_SHORT}}) |
+
+`login.ps1` pins the app URL, the login page (`{{LOGIN_URL}}`) and the landing pattern (`{{DONE_URL}}`) at the top of the file. It does not read hosts from env files, so editing an env file cannot send the password somewhere else. To change one, rerun `starterkit-dev-debug` setup. It fills the `{{USER_LABEL}}`, `{{PASSWORD_LABEL}}` and `{{SUBMIT_LABEL}}` controls by accessible name. It does not solve interactive CAPTCHAs or one-time codes: if one appears, the user completes it in the headed window.
+
+## Credentials (automatic, never ask)
+
+`{{LOGIN_DOMAIN}}` is used only for development and debugging. The project owner has authorized agents to log in there with `DEBUG_USERNAME` and `DEBUG_PASSWORD` from `.env.debug.local` ({{CREDS_STORAGE}}), for both this skill and any playwright-cli testing.
+
+- Whenever the login page (`{{LOGIN_DOMAIN}}/...`) appears, run `login.ps1` yourself (step 4). Never ask the user to log in, run the script or enter creds.
+- `login.ps1` is the only thing that reads the values. Never read, print or copy them, and never put them in a command line, chat or any other file.
+- This covers that host with the app at `{{APP_URL}}` only. Never send these creds anywhere else.
+- Only if `.env.debug.local` or either key is missing, tell the user which one; they add it to the file, not to chat.
+
+When cleaning `.playwright-cli/` output (snapshots, screenshots), keep `dev-auth.json`. It grants access to the account.
+
+## Output location (ALWAYS)
+
+Every file playwright-cli writes → `.playwright-cli/`. Never repo root. Any explicit `--filename=` MUST be prefixed `.playwright-cli/`.
+
+## Steps
+
+### 1. Verify dev server is up
+```bash
+curl -s -o /dev/null -w "%{http_code}" {{APP_URL}} --max-time 5
+```
+Expect `200`. If not → tell user to start the dev server (the project's dev command). Do NOT launch it silently.
+
+### 2. Open headed browser + go to login
+```bash
+playwright-cli -s=dev open --headed "{{APP_URL}}"
+```
+`--headed` = visible window. Omit it and the browser runs hidden — defeats the purpose.
+
+Confirm it is actually visible before going further:
+```bash
+playwright-cli list
+```
+Expect `headed: true` under `- dev:`. `headed: false` (session was left over from a headless run) → repeat the `open --headed` command above; it relaunches the session headed.
+
+### 3. Reuse the saved session
+If `.playwright-cli/dev-auth.json` exists:
+```bash
+playwright-cli -s=dev state-load .playwright-cli/dev-auth.json
+playwright-cli -s=dev goto "{{LANDING_URL}}"
+```
+
+### 4. No saved session, or it expired → run the login script
+```powershell
+./.claude/skills/dev-debug/login.ps1
+```
+Run it without asking. It fills the creds from `.env.debug.local`, logs in inside the headed `dev` browser, and saves `dev-auth.json`. The same applies if the login page appears mid-session. After one failed login, don't retry; report it so the user can fix `.env.debug.local`.
+
+### 5. Confirm login landed
+```bash
+playwright-cli -s=dev snapshot --depth=3
+```
+Success → Page URL matches `{{DONE_URL}}`. Still on a login or OAuth URL → session is missing or expired (step 4).
+
+## After login — debug freely
+
+Browser stays open (session `dev`). Drive it with any playwright-cli command:
+```bash
+playwright-cli -s=dev goto "{{APP_URL}}<route>"
+playwright-cli -s=dev snapshot                  # current DOM/refs
+playwright-cli -s=dev console                   # JS errors / logs
+playwright-cli -s=dev requests                  # network calls
+playwright-cli -s=dev click e12
+playwright-cli -s=dev screenshot --filename=.playwright-cli/bug.png
+```
+
+## Close when done
+```bash
+playwright-cli -s=dev close
+```
+
+## Troubleshooting
+
+| Symptom | Cause → Fix |
+|---------|-------------|
+| `login.ps1` reports "Reached neither the expected login page nor the app" | Real login URL differs from the pinned pattern (for example a percent-encoded `redirect_uri`) → rerun setup with `--login-url` |
+| `curl` != 200 | Dev server down → start it, don't auto-launch |
+| Stuck on the login page after submitting | Wrong creds or oauth-service unreachable → check `console` |
+| `textbox '{{USER_LABEL}}' not found` | Page not loaded yet → re-`snapshot`, re-`goto` |
+| Browser opens hidden / `list` shows `headed: false` | Missing `--headed`, or stale headless `dev` session → `open --headed` again |
+| No window but commands work | You used Playwright MCP or the browser pane instead of `playwright-cli` → switch back |
+| `login.ps1` says creds are missing | `.env.debug.local` or a `DEBUG_*` key is missing → user adds it to the file |
+| Root cluttered with `.yml`/`.png` | Missing `.playwright-cli/` prefix on `--filename` |
