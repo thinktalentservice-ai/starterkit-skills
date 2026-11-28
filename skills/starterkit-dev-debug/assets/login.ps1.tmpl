@@ -1,0 +1,80 @@
+# One-command dev login on the dev/debug host ({{LOGIN_HOST}}). Agents run it
+# automatically (SKILL.md step 4).
+#
+#   ./.claude/skills/dev-debug/login.ps1
+#
+# Reads DEBUG_USERNAME and DEBUG_PASSWORD from .env.debug.local, logs in inside the headed "dev" browser, and saves
+# the session to .playwright-cli/dev-auth.json for later runs.
+$ErrorActionPreference = 'Stop'
+
+$appUrl    = '{{APP_URL}}'
+$loginUrl  = '{{LOGIN_URL}}'
+$doneUrl   = '{{DONE_URL}}'
+$credsFile = '.env.debug.local'
+$authFile  = '.playwright-cli/dev-auth.json'
+
+function Get-PageUrl {
+    $raw = (playwright-cli -s=dev --raw eval 'location.href') -join ''
+    return $raw.Trim().Trim('"')
+}
+
+function Wait-PageUrl([string[]]$Patterns, [int]$Seconds) {
+    $deadline = (Get-Date).AddSeconds($Seconds)
+    do {
+        $url = Get-PageUrl
+        foreach ($pattern in $Patterns) { if ($url -like $pattern) { return $url } }
+        Start-Sleep -Milliseconds 500
+    } while ((Get-Date) -lt $deadline)
+    return $null
+}
+
+# playwright-cli echoes the code it ran, including typed values, so never print its output.
+function Invoke-Quietly([string[]]$CliArgs) {
+    $output = (playwright-cli -s=dev @CliArgs 2>&1) -join "`n"
+    if ($LASTEXITCODE -ne 0 -or $output -match '### Error') {
+        throw "playwright-cli '$($CliArgs[0])' failed. Output hidden because it can contain the password."
+    }
+}
+
+# playwright-cli sessions are tied to the folder, so run from the repo root.
+Push-Location (Join-Path $PSScriptRoot '../../..')
+$startedAt = Get-Date
+try {
+    if (-not (Test-Path $credsFile)) { throw "Missing $credsFile (DEBUG_USERNAME=... and DEBUG_PASSWORD=... lines)." }
+    $creds = @{}
+    foreach ($line in Get-Content $credsFile) {
+        $name, $value = $line -split '=', 2
+        if ($null -ne $value) { $creds[$name.Trim()] = $value.Trim() -replace '^(["''])(.*)\1$', '$2' }
+    }
+    if (-not $creds.DEBUG_USERNAME -or -not $creds.DEBUG_PASSWORD) { throw "$credsFile needs DEBUG_USERNAME and DEBUG_PASSWORD." }
+
+    try { $null = Invoke-WebRequest $appUrl -TimeoutSec 60 }
+    catch { throw "Dev server is not answering at $appUrl. Start it first." }
+
+    $sessions = (playwright-cli list) -join "`n"
+    if ($sessions -match '- dev:(\n[ \t]+.*)*?\n[ \t]+- headed: true') { Invoke-Quietly @('goto', $appUrl) }
+    else { Invoke-Quietly @('open', '--headed', $appUrl) }
+
+    $url = Wait-PageUrl @($loginUrl, $doneUrl) 60
+    if (-not $url) { throw "Reached neither the expected login page nor the app. Now at: $(Get-PageUrl)" }
+
+    if ($url -like $loginUrl) {
+        Invoke-Quietly @('fill', "getByRole('textbox', { name: '{{USER_LABEL}}' })", $creds.DEBUG_USERNAME)
+        Invoke-Quietly @('fill', "getByRole('textbox', { name: '{{PASSWORD_LABEL}}' })", $creds.DEBUG_PASSWORD)
+        Invoke-Quietly @('click', "getByRole('button', { name: '{{SUBMIT_LABEL}}' })")
+        if (-not (Wait-PageUrl @($doneUrl) 60)) {
+            throw 'Login did not reach the app. Check the browser window (wrong e-mail or password?).'
+        }
+    }
+
+    New-Item -ItemType Directory -Force (Split-Path $authFile) | Out-Null
+    Invoke-Quietly @('state-save', $authFile)
+    Write-Host "Logged in. Session saved to $authFile"
+}
+finally {
+    # Page snapshots taken during login can contain the typed values.
+    Get-ChildItem '.playwright-cli' -Filter 'page-*.yml' -ErrorAction SilentlyContinue |
+        Where-Object LastWriteTime -ge $startedAt |
+        Remove-Item
+    Pop-Location
+}

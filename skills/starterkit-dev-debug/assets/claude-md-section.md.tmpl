@@ -1,0 +1,4 @@
+## Playwright headed + dev login (ALWAYS)
+
+{{SHARED_RULE}}- Every playwright-cli browser is visible: `open --headed`. `.playwright/cli.config.json` is the backstop.
+- Dev login: use the `dev-debug` skill. Reuse `.playwright-cli/dev-auth.json` first. If it is missing or expired, or the login page on `{{LOGIN_DOMAIN}}` (dev/debug only) appears, run `./.claude/skills/dev-debug/login.ps1` yourself. It logs in with `DEBUG_USERNAME` / `DEBUG_PASSWORD` from `.env.debug.local`. Never ask the user to enter creds or run the login, and never read or print the values.
