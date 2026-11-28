@@ -1,7 +1,7 @@
 # starterkit-skills
 
 Agent skills for the Think Talent frontend starter kits (the
-`@devopsnext/starterkit-*` packages) and SunEditor v3, installable with the
+`@devopsnext/starterkit-*` packages), SunEditor v3 and dev-login setup, installable with the
 [`skills`](https://github.com/vercel-labs/skills) CLI.
 
 A skill gives a coding agent what it needs to use a library correctly: how to
@@ -29,7 +29,7 @@ npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skil
 npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill '*'
 
 # globally, for every project on this machine
-npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill starterkit-button -g
+npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill starterkit-dev-debug -g
 
 # target specific agents (otherwise the CLI detects what you have)
 npx skills add https://github.com/thinktalentservice-ai/starterkit-skills --skill starterkit-button -a claude-code cursor
@@ -66,6 +66,12 @@ frontmatter `description` lists the full set of triggers and symptoms.
 
 All packages above are published under the `@devopsnext/` npm scope.
 
+### Developer workflow
+
+| Skill | Written against | Use it for |
+|---|---|---|
+| [`starterkit-dev-debug`](skills/starterkit-dev-debug/SKILL.md) | `playwright-cli`, PowerShell 7 | Giving any localhost web project a `/dev-debug` skill: headed browser, automatic login on a development host from `.env.debug.local`, and the matching `CLAUDE.md` section. Install it with `-g` to use it in every project. |
+
 ### Editor
 
 | Skill | Written against | Use it for |
@@ -87,14 +93,15 @@ package disagree, the package is right.
 
 ## Bundled scripts
 
-Two skills ship a setup script. Run it from the root of **your** project, where
-`<skill-dir>` is wherever the skill was installed. Both accept `--dry-run` and
-`--force`, and neither installs dependencies.
+Three skills ship a setup script. Run it from the root of **your** project, where
+`<skill-dir>` is wherever the skill was installed. All accept `--dry-run` and
+`--force`, and none installs dependencies.
 
 | Script | What it adds to your project |
 |---|---|
 | `node <skill-dir>/scripts/setup-capture.mjs` (`starterkit-skeleton-loader`) | The `skeleton:capture` and `skeleton:list` package scripts, plus the capture script they run. |
 | `node <skill-dir>/scripts/setup-intro.mjs` (`starterkit-intro`) | The `lint:intro` gate and, for the Next.js App Router, `intro:list` and `intro:capture`. |
+| `node <skill-dir>/scripts/setup-dev-debug.mjs --app-url … --landing-url … --login-domain …` (`starterkit-dev-debug`) | The `dev-debug` skill, the `CLAUDE.md` section, `.env.debug.local` with empty credentials, the headed playwright-cli config and `.gitignore` rules. |
 
 `starterkit-css-imports` ships a checker instead: `node <skill-dir>/scripts/check-css-imports.mjs`
 reports misplaced stylesheet imports and exits 1 on errors, and `--fix` moves Sass-hoisted CSS
